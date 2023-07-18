@@ -1,0 +1,71 @@
+# Ignore project-specific files
+OpenAi/bin/
+OpenAi/obj/
+ScriptRunner/bin/
+ScriptRunner/obj/
+
+# Ignore Visual Studio files
+.vs/
+*.suo
+*.user
+*.sln.docstates
+*.pdb
+
+# Ignore build output and intermediate files
+bin/
+obj/
+*.dll
+*.exe
+*.pdb
+*.cache
+*.dll.config
+*.userprefs
+*.vsix
+*_i.c
+*_p.c
+*.ilk
+*.meta
+*.obj
+*.pch
+*.res
+*.resources
+*.rsg
+*.tlb
+*.tli
+*.tlh
+*.tmp
+*.tmp_proj
+*_wpftmp.csproj
+*.log
+*.vs/
+*.vssscc
+*.vspscc
+*_i.c
+*_p.c
+ipch/
+*.aps
+*.bsc
+*.scc
+*.sln.docstates
+*.suo
+*. suo
+*.user
+*.vshost.*
+*.[Cc]ache
+*.[Cc]lass
+*.[Ff]irst
+*.[Ff]oo
+*.[Cc]harmap
+
+# Ignore NuGet packages
+/packages/*.zip
+*.nuget.props
+*.nuget.targets
+
+# Ignore Resharper files
+_ReSharper*/
+*.ReSharper*/
+*.sln.DotSettings.user
+
+# Ignore Visual Studio Code files
+.vscode/
