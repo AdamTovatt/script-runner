@@ -1,14 +1,9 @@
 ﻿using OpenAiTests.Utilities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace OpenAiTests.Tests
 {
     [TestClass]
-    public class Environment
+    public class EnvironmentTests
     {
         [TestMethod]
         public void OpenAiKeyFileExists()
@@ -20,6 +15,12 @@ namespace OpenAiTests.Tests
         public void OpenAiKeyFileHasContent()
         {
             Assert.IsTrue(!string.IsNullOrEmpty(File.ReadAllText(TestEnvironmentHelper.OpenAiKeyPath)), $"The {TestEnvironmentHelper.OpenAiKeyPath} file is missing content");
+        }
+
+        [TestMethod]
+        public void OpenAiKeyCanBeLoaded()
+        {
+            Assert.IsTrue(!string.IsNullOrEmpty(TestEnvironmentHelper.GetOpenAiApiKey()));
         }
     }
 }
