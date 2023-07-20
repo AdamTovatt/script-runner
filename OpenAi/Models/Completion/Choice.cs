@@ -1,16 +1,28 @@
-﻿namespace OpenAi.Models.Completion
+﻿using System.Text.Json.Serialization;
+
+namespace OpenAi.Models.Completion
 {
     public class Choice
     {
+        [JsonPropertyName("index")]
         public int Index { get; set; }
-        public Message Message { get; set; }
-        public FinishReason FinishReason { get; set; }
 
-        public Choice(int index, Message message, FinishReason finishReason)
+        [JsonPropertyName("message")]
+        public Message Message { get; set; }
+
+        [JsonPropertyName("finish_reason")]
+        public string FinishReason { get; set; }
+
+        public Choice(int index, Message message, string finishReason)
         {
             Index = index;
             Message = message;
             FinishReason = finishReason;
+        }
+
+        public override string ToString()
+        {
+            return Message.ToString();
         }
     }
 }

@@ -14,5 +14,17 @@ namespace OpenAi.Models.Completion
             Description = description;
             Parameters = parameters;
         }
+
+        public Function(string name, string description)
+        {
+            Name = name;
+            Description = description;
+            Parameters = new JsonObject();
+        }
+
+        public void AddParameter(string propertyName, object value)
+        {
+            Parameters.Add(propertyName, JsonValue.Create(value));
+        }
     }
 }
