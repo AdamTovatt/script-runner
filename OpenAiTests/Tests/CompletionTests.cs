@@ -1,5 +1,7 @@
 using OpenAi;
+using OpenAi.Helpers;
 using OpenAi.Models.Completion;
+using OpenAi.Models.Completion.Parameters;
 using OpenAiTests.Utilities;
 using System.Text.Json;
 
@@ -9,16 +11,16 @@ namespace OpenAiTests.Tests
     public class CompletionTests
     {
         [TestMethod]
-        public void CanDeserializeCompletionResult()
+        public void DeserializeCompletionResult()
         {
             string json = "{\r\n  \"id\": \"chatcmpl-7e93tzyShui2zqD48gsCDGc6jjoPq\",\r\n  \"object\": \"chat.completion\",\r\n  \"created\": 1689802309,\r\n  \"model\": \"gpt-3.5-turbo-0613\",\r\n  \"choices\": [\r\n    {\r\n      \"index\": 0,\r\n      \"message\": {\r\n        \"role\": \"assistant\",\r\n        \"content\": \"joyful, glad, content\"\r\n      },\r\n      \"finish_reason\": \"stop\"\r\n    }\r\n  ],\r\n  \"usage\": {\r\n    \"prompt_tokens\": 31,\r\n    \"completion_tokens\": 6,\r\n    \"total_tokens\": 37\r\n  }\r\n}\r\n";
-        
+
             CompletionResult? completionResult = JsonSerializer.Deserialize<CompletionResult>(json);
 
             Assert.IsNotNull(completionResult);
             Assert.IsNotNull(completionResult.Model);
             Assert.AreEqual(1, completionResult.Choices.Count);
-            
+
             Choice choice = completionResult.Choices[0];
 
             Assert.IsNotNull(choice);
@@ -38,7 +40,7 @@ namespace OpenAiTests.Tests
         public async Task CompleteBasicMessage()
         {
             OpenAiApi openAi = new OpenAiApi(TestEnvironmentHelper.GetOpenAiApiKey());
-            
+
             CompletionParameter completionParameter = new CompletionParameter(Model.Default);
             completionParameter.AddSystemMessage("The user will provide you with a word and you will write three words that have the same meaning");
             completionParameter.AddUserMessage("happy");
@@ -65,19 +67,58 @@ namespace OpenAiTests.Tests
         }
 
         [TestMethod]
-        public async Task FunctionsCanBeIncluded()
+        public async Task IncludeFunctions()
         {
             OpenAiApi openAi = new OpenAiApi(TestEnvironmentHelper.GetOpenAiApiKey());
 
             CompletionParameter completionParameter = new CompletionParameter(Model.Default);
 
             Function function = new Function("GetTheCurrentTime", "Will get the current time");
-            function.AddParameter("timeZoneOffset", 1);
+            function.AddParameter("timeZoneOffset", typeof(int), "The timezone of the user");
 
             completionParameter.AddUserMessage("What is the current time?");
             completionParameter.AddFunction(function);
 
             CompletionResult completionResult = await openAi.CompleteAsync(completionParameter);
+        }
+
+        [TestMethod]
+        public void GenerateParameters()
+        {
+            string emptyParameterJson = new ParameterCollection().ToJson();
+            Assert.AreEqual("{\"type\": \"object\", \"properties\": {}}", emptyParameterJson);
+
+            ParameterCollection basicParameter = new ParameterCollection(); // test a single basic parameter that is not required
+            basicParameter.AddParameter(new Parameter("simpleString", typeof(string), "The string that the user should enter"));
+            string basicParameterJson = basicParameter.ToJson();
+
+            Assert.AreEqual("{\"type\": \"object\", \"properties\": {\"simpleString\": {\"type\": \"string\", \"description\": \"The string that the user should enter\"}}}", basicParameterJson);
+
+            ParameterCollection parameterWithTwoValues = new ParameterCollection(); // test two parameters that are not required
+            parameterWithTwoValues.AddParameter(new Parameter("timeZoneOffset", typeof(int), "The timezone of the user"));
+            parameterWithTwoValues.AddParameter(new Parameter("name", typeof(string), "The name of the user"));
+            string parameterWithTwoValuesJson = parameterWithTwoValues.ToJson();
+
+            Assert.AreEqual("{\"type\": \"object\", \"properties\": {\"timeZoneOffset\": {\"type\": \"number\", \"description\": \"The timezone of the user\"}, \"name\": {\"type\": \"string\", \"description\": \"The name of the user\"}}}", parameterWithTwoValuesJson);
+
+            ParameterCollection parameterWithTwoValues2 = new ParameterCollection(); // test two parameters that, where one of them is required
+            parameterWithTwoValues2.AddParameter(new Parameter("timeZoneOffset", typeof(int), "The timezone of the user"), true);
+            parameterWithTwoValues2.AddParameter(new Parameter("name", typeof(string), "The name of the user"));
+            string parameterWithTwoValuesJson2 = parameterWithTwoValues2.ToJson();
+
+            Assert.AreEqual("{\"type\": \"object\", \"properties\": {\"timeZoneOffset\": {\"type\": \"number\", \"description\": \"The timezone of the user\"}, \"name\": {\"type\": \"string\", \"description\": \"The name of the user\"}}, \"required\": [\"timeZoneOffset\"]}", parameterWithTwoValuesJson2);
+        }
+
+        [TestMethod]
+        public void GetJsonTypeNames()
+        {
+            Assert.AreEqual("string", typeof(string).GetJsonTypeName());
+            Assert.AreEqual("number", typeof(int).GetJsonTypeName());
+            Assert.AreEqual("number", typeof(double).GetJsonTypeName());
+            Assert.AreEqual("boolean", typeof(bool).GetJsonTypeName());
+            Assert.AreEqual("object", typeof(object).GetJsonTypeName());
+            Assert.AreEqual("array", typeof(List<int>).GetJsonTypeName());
+            Assert.AreEqual("array", typeof(int[]).GetJsonTypeName());
         }
     }
 }

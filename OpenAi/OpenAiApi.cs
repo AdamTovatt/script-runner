@@ -2,6 +2,7 @@
 using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text;
+using System.Text.Json.Serialization;
 
 namespace OpenAi
 {
@@ -31,7 +32,9 @@ namespace OpenAi
 
             JsonSerializerOptions options = new JsonSerializerOptions
             {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase, DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+                WriteIndented = true,
             };
 
             string jsonContent = JsonSerializer.Serialize(completionParameter, options);
@@ -49,7 +52,7 @@ namespace OpenAi
                 return result;
             }
 
-            throw new CompletionException($"({response.StatusCode}) Error when completing based on the parameter {completionParameter}.\n{response.Content.ReadAsStringAsync().Result}", response);
+            throw new CompletionException($"({response.StatusCode}) Error when completing based on the parameter {completionParameter}.\n{await response.Content.ReadAsStringAsync()}", response);
         }
     }
 }

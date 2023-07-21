@@ -1,4 +1,6 @@
-﻿namespace OpenAi.Models.Completion
+﻿using System.Text.Json.Serialization;
+
+namespace OpenAi.Models.Completion
 {
     /// <summary>
     /// A parameter to use for sending a completion request to the OpenAI API.
@@ -8,21 +10,25 @@
         /// <summary>
         /// The model to use for the completion
         /// </summary>
+        [JsonPropertyName("model")]
         public string Model { get; set; }
 
         /// <summary>
         /// The messages that has been in the conversation so far
         /// </summary>
+        [JsonPropertyName("messages")]
         public List<Message> Messages { get; set; }
 
         /// <summary>
         /// The functions that can be called
         /// </summary>
+        [JsonPropertyName("functions")]
         public List<Function>? Functions { get; set; }
 
         /// <summary>
         /// Determines how OpenAI will handle functions. "auto" means it will automatically determine. Use the SetFunctionCall method to specify a function that parameters should be collected for
         /// </summary>
+        [JsonPropertyName("function_call")]
         public string FunctionCall { get; set; }
 
         /// <summary>

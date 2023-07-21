@@ -1,4 +1,4 @@
-﻿using System.Text.Json.Nodes;
+﻿using OpenAi.Models.Completion.Parameters;
 
 namespace OpenAi.Models.Completion
 {
@@ -6,9 +6,9 @@ namespace OpenAi.Models.Completion
     {
         public string Name { get; set; }
         public string Description { get; set; }
-        public JsonObject Parameters { get; set; }
+        public ParameterCollection Parameters { get; set; }
 
-        public Function(string name, string description, JsonObject parameters)
+        public Function(string name, string description, ParameterCollection parameters)
         {
             Name = name;
             Description = description;
@@ -19,12 +19,12 @@ namespace OpenAi.Models.Completion
         {
             Name = name;
             Description = description;
-            Parameters = new JsonObject();
+            Parameters = new ParameterCollection();
         }
 
-        public void AddParameter(string propertyName, object value)
+        public void AddParameter(string name, Type type, string description)
         {
-            Parameters.Add(propertyName, JsonValue.Create(value));
+            Parameters.AddParameter(new Parameter(name, type, description));
         }
     }
 }
