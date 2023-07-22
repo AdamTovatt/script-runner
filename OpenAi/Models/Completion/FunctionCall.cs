@@ -28,12 +28,5 @@ namespace OpenAi.Models.Completion
             Name = name;
             Arguments = arguments;
         }
-
-        public static Dictionary<string, object>? DeserializeArgumentsJson(string json)
-        {
-            JsonSerializerOptions options = new JsonSerializerOptions() { UnknownTypeHandling = JsonUnknownTypeHandling.JsonNode };
-            Dictionary<string, object>? result = JsonSerializer.Deserialize<Dictionary<string, object>>(json, options);
-            return result;
-        }
     }
 }

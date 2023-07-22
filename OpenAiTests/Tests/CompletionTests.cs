@@ -98,20 +98,6 @@ namespace OpenAiTests.Tests
         }
 
         [TestMethod]
-        public void DeserializeFunctionArguments()
-        {
-            Dictionary<string, object>? arguments = FunctionCall.DeserializeArgumentsJson("{\n\"timeZoneOffset\": 0,\n\"userName\": \"user\"\n}");
-
-            Assert.IsNotNull(arguments);
-
-            int timeZoneOffset = (int)(JsonNode)arguments["timeZoneOffset"];
-            string? userName = (string?)(JsonNode)arguments["userName"];
-
-            Assert.AreEqual(0, timeZoneOffset);
-            Assert.AreEqual("user", userName);
-        }
-
-        [TestMethod]
         public void GenerateParameters()
         {
             string emptyParameterJson = new ParameterCollection().ToJson();
