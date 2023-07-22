@@ -3,15 +3,32 @@ using System.Text.Json.Nodes;
 
 namespace ScriptRunner
 {
+    /// <summary>
+    /// Represents a compiled script, is also the class that created scripts should inherit from
+    /// </summary>
     public class CompiledScript
     {
+        /// <summary>
+        /// The context that the script runs in. Can contain usefull information for the script
+        /// </summary>
         public ScriptContext Context { get; set; }
 
+        /// <summary>
+        /// Constructor taking a script context as a parameter
+        /// </summary>
+        /// <param name="context">The context that the script runs in</param>
         public CompiledScript(ScriptContext context)
         {
             Context = context;
         }
 
+        /// <summary>
+        /// Will run a script with the specified parameters
+        /// </summary>
+        /// <param name="parameters">The parameters to use</param>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException">If the script is missing a method with the [ScriptStart] attribute</exception>
+        /// <exception cref="MissingMethodException">Will be thrown if the JsonNode type is missing the GetValue method, this should really never happen unless the actual System.Text.Json.Nodes library is changed</exception>
         public object? Run(Dictionary<string, JsonNode>? parameters)
         {
             MethodInfo[] methodInfos = GetType().GetMethods();
@@ -38,7 +55,7 @@ namespace ScriptRunner
                             MethodInfo? getValueMethod = typeof(JsonNode).GetMethod("GetValue");
 
                             if (getValueMethod == null)
-                                throw new Exception("The type JsonNode did not contain a method called GetValue when it was expected to");
+                                throw new MissingMethodException("The type JsonNode did not contain a method called GetValue when it was expected to");
 
                             MethodInfo getValueMethodWithRightType = getValueMethod.MakeGenericMethod(wantedParameter.ParameterType);
                             parameterResult = getValueMethodWithRightType.Invoke(foundParameter, null);

@@ -6,15 +6,29 @@ using System.Reflection;
 
 namespace ScriptRunner.Models
 {
+    /// <summary>
+    /// Class that is used to contain script code so that it can be compiled
+    /// </summary>
     public class ScriptCode
     {
+        /// <summary>
+        /// The code of the script
+        /// </summary>
         public string Code { get; set; }
 
+        /// <summary>
+        /// Constructor taking the code as a string
+        /// </summary>
+        /// <param name="code">The code</param>
         public ScriptCode(string code)
         {
             Code = code;
         }
 
+        /// <summary>
+        /// Will compile the code into a ScriptCompileResult which contains information about errors or warnings, or a CompiledAssembly if it was successfull
+        /// </summary>
+        /// <returns>A ScriptCompileResult</returns>
         public ScriptCompileResult Compile()
         {
             ScriptCompileResult result = new ScriptCompileResult();
