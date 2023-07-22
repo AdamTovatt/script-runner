@@ -8,7 +8,7 @@ namespace ScriptRunnerTests
     public class ScriptTests
     {
         [TestMethod]
-        public void ScriptCanBeCompiled()
+        public void CompileAndRunScript()
         {
             string script = @"using ScriptRunner;
                                 
