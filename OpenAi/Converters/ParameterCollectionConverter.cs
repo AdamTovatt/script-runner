@@ -1,7 +1,8 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
+using OpenAi.Models.Completion.Parameters;
 
-namespace OpenAi.Models.Completion.Parameters
+namespace OpenAi.Converters
 {
     /// <summary>
     /// Used to convert a ParameterCollection to JSON

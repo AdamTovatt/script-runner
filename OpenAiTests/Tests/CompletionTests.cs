@@ -4,6 +4,7 @@ using OpenAi.Models.Completion;
 using OpenAi.Models.Completion.Parameters;
 using OpenAiTests.Utilities;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace OpenAiTests.Tests
 {
@@ -84,14 +85,30 @@ namespace OpenAiTests.Tests
             Assert.IsNotNull(completionResult);
             Assert.IsNotNull(completionResult.Choices);
             Assert.AreEqual(1, completionResult.Choices.Count);
-            
+
             Choice choice = completionResult.Choices[0];
 
             Assert.IsNotNull(choice);
             Assert.AreEqual("function_call", choice.FinishReason);
             Assert.IsNotNull(choice.Message.FunctionCall);
             Assert.AreEqual("GetTheCurrentTime", choice.Message.FunctionCall.Name);
-            Assert.AreEqual("{\n\"timeZoneOffset\": 0\n}", choice.Message.FunctionCall.Arguments);
+            Assert.IsNotNull(choice.Message.FunctionCall.Arguments);
+            Assert.AreEqual(1, choice.Message.FunctionCall.Arguments.Count);
+            Assert.AreEqual(0, (int)choice.Message.FunctionCall.Arguments["timeZoneOffset"]);
+        }
+
+        [TestMethod]
+        public void DeserializeFunctionArguments()
+        {
+            Dictionary<string, object>? arguments = FunctionCall.DeserializeArgumentsJson("{\n\"timeZoneOffset\": 0,\n\"userName\": \"user\"\n}");
+
+            Assert.IsNotNull(arguments);
+
+            int timeZoneOffset = (int)(JsonNode)arguments["timeZoneOffset"];
+            string? userName = (string?)(JsonNode)arguments["userName"];
+
+            Assert.AreEqual(0, timeZoneOffset);
+            Assert.AreEqual("user", userName);
         }
 
         [TestMethod]
@@ -137,6 +154,7 @@ namespace OpenAiTests.Tests
         public void SerializeCompletionParamterWithFunction()
         {
             CompletionParameter completionParameter = new CompletionParameter(Model.Default);
+            completionParameter.FunctionCall = "auto";
 
             Function function = new Function("GetTheCurrentTime", "Will get the current time");
             function.Parameters.Add(new Parameter("timeZoneOffset", typeof(int), "The offset"));

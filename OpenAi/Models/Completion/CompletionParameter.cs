@@ -30,7 +30,7 @@ namespace OpenAi.Models.Completion
         /// Determines how OpenAI will handle functions. "auto" means it will automatically determine. Use the SetFunctionCall method to specify a function that parameters should be collected for
         /// </summary>
         [JsonPropertyName("function_call")]
-        public string FunctionCall { get; set; }
+        public string? FunctionCall { get; set; }
 
         /// <summary>
         /// Constructor for a completion parameter
@@ -43,7 +43,6 @@ namespace OpenAi.Models.Completion
             Model = model;
             Messages = messages;
             Functions = functions;
-            FunctionCall = "auto";
         }
 
         /// <summary>
@@ -54,7 +53,6 @@ namespace OpenAi.Models.Completion
         {
             Model = model;
             Messages = new List<Message>();
-            FunctionCall = "auto";
         }
 
         /// <summary>

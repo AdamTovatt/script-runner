@@ -1,4 +1,7 @@
-﻿using System.Text.Json.Serialization;
+﻿using OpenAi.Converters;
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
 
 namespace OpenAi.Models.Completion
 {
@@ -17,12 +20,20 @@ namespace OpenAi.Models.Completion
         /// The arguments to pass to the function, as a json string that can be deserialized into an object
         /// </summary>
         [JsonPropertyName("arguments")]
-        public string Arguments { get; set; }
+        [JsonConverter(typeof(ArgumentsConverter))]
+        public Dictionary<string, JsonNode>? Arguments { get; set; }
 
-        public FunctionCall(string name, string arguments)
+        public FunctionCall(string name, Dictionary<string, JsonNode>? arguments)
         {
             Name = name;
             Arguments = arguments;
+        }
+
+        public static Dictionary<string, object>? DeserializeArgumentsJson(string json)
+        {
+            JsonSerializerOptions options = new JsonSerializerOptions() { UnknownTypeHandling = JsonUnknownTypeHandling.JsonNode };
+            Dictionary<string, object>? result = JsonSerializer.Deserialize<Dictionary<string, object>>(json, options);
+            return result;
         }
     }
 }

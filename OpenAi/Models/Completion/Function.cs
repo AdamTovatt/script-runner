@@ -1,4 +1,5 @@
-﻿using OpenAi.Models.Completion.Parameters;
+﻿using OpenAi.Converters;
+using OpenAi.Models.Completion.Parameters;
 using System.Text.Json.Serialization;
 
 namespace OpenAi.Models.Completion
