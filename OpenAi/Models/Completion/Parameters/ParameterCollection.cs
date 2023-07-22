@@ -1,11 +1,17 @@
 ﻿using System.Text;
+using System.Text.Json.Serialization;
 
 namespace OpenAi.Models.Completion.Parameters
 {
     public class ParameterCollection
     {
+        [JsonPropertyName("type")]
         public string Type { get; set; }
+
+        [JsonPropertyName("properties")]
         public List<Parameter>? Parameters { get; set; }
+
+        [JsonPropertyName("required")]
         public List<Parameter>? RequiredParameters { get; set; }
 
         public ParameterCollection()
@@ -13,12 +19,12 @@ namespace OpenAi.Models.Completion.Parameters
             Type = "object";
         }
 
-        public void AddParameter(Parameter parameter)
+        public void Add(Parameter parameter)
         {
-            AddParameter(parameter, false);
+            Add(parameter, false);
         }
 
-        public void AddParameter(Parameter parameter, bool required)
+        public void Add(Parameter parameter, bool required)
         {
             if (Parameters == null)
                 Parameters = new List<Parameter>();
@@ -26,10 +32,10 @@ namespace OpenAi.Models.Completion.Parameters
             Parameters.Add(parameter);
 
             if (required)
-                AddRequiredParameter(parameter);
+                AddRequired(parameter);
         }
 
-        public void AddRequiredParameter(Parameter parameter)
+        public void AddRequired(Parameter parameter)
         {
             if (RequiredParameters == null)
                 RequiredParameters = new List<Parameter>();

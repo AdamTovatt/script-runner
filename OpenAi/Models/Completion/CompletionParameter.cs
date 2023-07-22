@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace OpenAi.Models.Completion
 {
@@ -111,6 +112,22 @@ namespace OpenAi.Models.Completion
         public void SetFunctionCall(string functionName)
         {
             FunctionCall = string.Format("{\"name\": \"{0}\"", functionName);
+        }
+
+        /// <summary>
+        /// Will serialize the object to JSON
+        /// </summary>
+        /// <returns></returns>
+        public string ToJson()
+        {
+            JsonSerializerOptions options = new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+                WriteIndented = true,
+            };
+
+            return JsonSerializer.Serialize(this, options);
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using OpenAi.Models.Completion.Parameters;
+using System.Text.Json.Serialization;
 
 namespace OpenAi.Models.Completion
 {
@@ -6,6 +7,8 @@ namespace OpenAi.Models.Completion
     {
         public string Name { get; set; }
         public string Description { get; set; }
+
+        [JsonConverter(typeof(ParameterCollectionConverter))]
         public ParameterCollection Parameters { get; set; }
 
         public Function(string name, string description, ParameterCollection parameters)
@@ -24,7 +27,7 @@ namespace OpenAi.Models.Completion
 
         public void AddParameter(string name, Type type, string description)
         {
-            Parameters.AddParameter(new Parameter(name, type, description));
+            Parameters.Add(new Parameter(name, type, description));
         }
     }
 }

@@ -30,14 +30,7 @@ namespace OpenAi
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, completionUrl);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
 
-            JsonSerializerOptions options = new JsonSerializerOptions
-            {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-                WriteIndented = true,
-            };
-
-            string jsonContent = JsonSerializer.Serialize(completionParameter, options);
+            string jsonContent = completionParameter.ToJson();
             request.Content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
             HttpResponseMessage response = await client.SendAsync(request);

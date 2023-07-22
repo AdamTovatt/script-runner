@@ -14,10 +14,10 @@ namespace OpenAi.Models.Completion
         public string? Name { get; set; }
 
         [JsonPropertyName("function_call")]
-        public string? FunctionCall { get; set; }
+        public FunctionCall? FunctionCall { get; set; }
 
         [JsonConstructor]
-        public Message(string role, string content, string? name, string? functionCall)
+        public Message(string role, string content, string? name, FunctionCall? functionCall)
         {
             Role = role;
             Content = content;
