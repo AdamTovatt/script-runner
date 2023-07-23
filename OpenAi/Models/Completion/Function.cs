@@ -26,9 +26,9 @@ namespace OpenAi.Models.Completion
             Parameters = new ParameterCollection();
         }
 
-        public void AddParameter(string name, Type type, string description)
+        public void AddParameter(string name, Type type, string description, bool required)
         {
-            Parameters.Add(new Parameter(name, type, description));
+            Parameters.Add(new Parameter(name, type, description), required);
         }
     }
 }

@@ -33,20 +33,38 @@ namespace ScriptRunner.Models
             if (CompiledAssembly == null)
                 throw new Exception("Tried to get script from a ScriptCompileResult without any CompiledAssembly. Check for null on the CompiledAssembly before calling GetScript()!");
 
+            Type? type = GetScriptType();
+
+            if (type != null)
+            {
+                CompiledScript? compiledScript = (CompiledScript?)Activator.CreateInstance(type, scriptContext);
+
+                if (compiledScript != null)
+                    return compiledScript;
+            }
+
+            throw new Exception("GetScript() was called on a ScriptCompileResult that has a CompiledAssembly but that assembly doesn't contain any type which is a type of CompiledScript. You should create a class that inherits from ScriptRunner.CompiledScript");
+        }
+
+        /// <summary>
+        /// Will try to find a type that inherits from CompiledScript in the CompiledAssembly
+        /// </summary>
+        /// <returns>The type if it is found, null if it is not found</returns>
+        /// <exception cref="Exception">Will throw an exception if the compiled assembly is null, this method should only be used when the compilation was successfull</exception>
+        public Type? GetScriptType()
+        {
+            if (CompiledAssembly == null)
+                throw new Exception("Tried to get script type from a ScriptCompileResult without any CompiledAssembly. Check for null on the CompiledAssembly before calling GetScript()!");
+
             foreach (Type type in CompiledAssembly.GetTypes())
             {
                 if (type.IsSubclassOf(typeof(CompiledScript)))
                 {
-                    CompiledScript? compiledScript = (CompiledScript?)Activator.CreateInstance(type, scriptContext);
-
-                    if (compiledScript != null)
-                    {
-                        return compiledScript;
-                    }
+                    return type;
                 }
             }
 
-            throw new Exception("GetScript() was called on a ScriptCompileResult that has a CompiledAssembly but that assembly doesn't contain any type which is a type of CompiledScript. You should create a class that inherits from ScriptRunner.CompiledScript");
+            return null;
         }
     }
 }
