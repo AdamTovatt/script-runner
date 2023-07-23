@@ -15,4 +15,9 @@
     <PackageReference Include="coverlet.collector" Version="3.1.2" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\ScriptRunner\ScriptRunner.csproj" />
+    <ProjectReference Include="..\ScriptToFunctionConverter\ScriptConverter.csproj" />
+  </ItemGroup>
+
 </Project>

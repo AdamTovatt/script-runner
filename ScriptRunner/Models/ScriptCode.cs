@@ -1,5 +1,6 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Emit;
 using ScriptRunner.Providers;
 using System.Reflection;
@@ -72,10 +73,71 @@ namespace ScriptRunner.Models
                     Assembly assembly = Assembly.Load(dllStream.ToArray(), pdbStream.ToArray());
 
                     result.CompiledAssembly = assembly;
+                    result.XmlComments = GetXmlComments(syntaxTree, compilation);
                 }
             }
 
             return result;
+        }
+
+        private Dictionary<string, XmlComment> GetXmlComments(SyntaxTree syntaxTree, CSharpCompilation compilation)
+        {
+            Dictionary<string, XmlComment> xmlComments = new Dictionary<string, XmlComment>();
+
+            CompilationUnitSyntax root = (CompilationUnitSyntax)syntaxTree.GetRoot();
+            Stack<SyntaxNode> membersToCheck = new Stack<SyntaxNode>(root.Members);
+
+            while(membersToCheck.Count() > 0)
+            { 
+                SyntaxNode member = membersToCheck.Pop();
+                
+                if (member is MethodDeclarationSyntax methodDeclaration)
+                {
+                    SyntaxTrivia trivia = methodDeclaration.GetLeadingTrivia().SingleOrDefault(t => IsCommentTrivia(t));
+                    if (trivia != default(SyntaxTrivia))
+                    {
+                        DocumentationCommentTriviaSyntax? xmlTrivia = (DocumentationCommentTriviaSyntax?)trivia.GetStructure();
+                        if (xmlTrivia != null)
+                        {
+                            string commentText = xmlTrivia.ToFullString().Trim();
+                            string methodName = methodDeclaration.Identifier.Text + methodDeclaration.ParameterList.ToString();
+                            xmlComments[methodName] = new XmlComment(commentText);
+                        }
+                    }
+                }
+
+                List<SyntaxNode>? membersInMember = GetMembersList(member);
+
+                if (membersInMember != null)
+                {
+                    foreach (SyntaxNode memberInMember in membersInMember)
+                        membersToCheck.Push(memberInMember);
+                }
+            }
+
+            return xmlComments;
+        }
+
+        private List<SyntaxNode>? GetMembersList(SyntaxNode node)
+        {
+            Type nodeType = node.GetType();
+
+            PropertyInfo? membersProperty = nodeType.GetProperty("Members");
+
+            if (membersProperty != null && typeof(IEnumerable<SyntaxNode>).IsAssignableFrom(membersProperty.PropertyType))
+            {
+                IEnumerable<SyntaxNode>? membersList = (IEnumerable<SyntaxNode>?)membersProperty.GetValue(node);
+
+                if (membersList != null)
+                    return new List<SyntaxNode>(membersList);
+            }
+
+            return null;
+        }
+
+        private bool IsCommentTrivia(SyntaxTrivia trivia)
+        {
+            return trivia.IsKind(SyntaxKind.SingleLineDocumentationCommentTrivia) || trivia.IsKind(SyntaxKind.MultiLineDocumentationCommentTrivia);
         }
     }
 }

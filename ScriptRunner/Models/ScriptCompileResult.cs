@@ -23,6 +23,11 @@ namespace ScriptRunner.Models
         public List<string>? Warnings { get; set; }
 
         /// <summary>
+        /// A dictionary containing the xml comments for the script, the key is the name of the member and it's parameters and the value is the xml comment
+        /// </summary>
+        public Dictionary<string, XmlComment>? XmlComments { get; set; }
+
+        /// <summary>
         /// Will return the script from the CompiledAssembly. All scripts should inherit from CompiledScript and this method will return the first type that inherits from CompiledScript
         /// </summary>
         /// <param name="scriptContext">The context create the script in, the context can be used to provide the script with nice stuff</param>
@@ -63,6 +68,17 @@ namespace ScriptRunner.Models
                     return type;
                 }
             }
+
+            return null;
+        }
+
+        public XmlComment? GetXmlComment(string methodHeader)
+        {
+            if(XmlComments == null)
+                return null;
+
+            if(XmlComments.TryGetValue(methodHeader, out XmlComment? xmlComment))
+                return xmlComment;
 
             return null;
         }

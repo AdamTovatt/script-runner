@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScriptRunnerTests", "Script
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScriptConverter", "ScriptToFunctionConverter\ScriptConverter.csproj", "{4971B899-72B2-472F-B753-2197C1BB379F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScriptConverterTests", "ScriptConverterTests\ScriptConverterTests.csproj", "{1729A523-5378-4DD9-8819-FE06C009A585}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{4971B899-72B2-472F-B753-2197C1BB379F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4971B899-72B2-472F-B753-2197C1BB379F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4971B899-72B2-472F-B753-2197C1BB379F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1729A523-5378-4DD9-8819-FE06C009A585}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1729A523-5378-4DD9-8819-FE06C009A585}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1729A523-5378-4DD9-8819-FE06C009A585}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1729A523-5378-4DD9-8819-FE06C009A585}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
