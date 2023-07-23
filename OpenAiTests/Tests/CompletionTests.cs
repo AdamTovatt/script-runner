@@ -98,6 +98,48 @@ namespace OpenAiTests.Tests
         }
 
         [TestMethod]
+        public async Task CompleteInAConversation()
+        {
+            OpenAiApi openAi = new OpenAiApi(TestEnvironmentHelper.GetOpenAiApiKey());
+
+            Conversation conversation = new Conversation();
+
+            Function timeFunction = new Function("GetTimeInTimeZone", "Will get the time in the specified timezone");
+            timeFunction.Parameters.Add(new Parameter("timeZoneOffset", typeof(int), "The timezone of the user"), true);
+            conversation.Add(timeFunction);
+
+            Function writeFunction = new Function("WriteStringToDatabase", "Will take a string input and write it to the database");
+            writeFunction.Parameters.Add(new Parameter("valueToWrite", typeof(string), "The text to write to the database, has to be aquired from the user"), true);
+            conversation.Add(writeFunction);
+
+            CompletionParameter parameter = conversation.CreateCompletionParameter(Model.Default);
+            parameter.AddSystemMessage("You have a number of functions at your disposal. If the user asks you for something that requires the use of a function you will make sure to get all the required parameters from the user and then call that function.");
+            parameter.AddUserMessage("I would like write a text to the database");
+
+            CompletionResult completionResult = await openAi.CompleteAsync(parameter);
+            conversation.Add(completionResult);
+
+            Assert.IsNotNull(completionResult);
+            Assert.IsNotNull(completionResult.Choices);
+            Assert.AreEqual(1, completionResult.Choices.Count);
+
+            Choice choice = completionResult.Choices[0];
+            Assert.IsNotNull(choice);
+            Assert.AreEqual("stop", choice.FinishReason);
+
+            parameter.AddUserMessage("Yes, of course. I would like to write the text \"Hello World\" to the database");
+            completionResult = await openAi.CompleteAsync(parameter);
+            conversation.Add(completionResult);
+
+            Assert.IsNotNull(completionResult);
+            Assert.IsNotNull(completionResult.Choices);
+
+            choice = completionResult.Choices[0];
+            Assert.IsNotNull(choice);
+            Assert.AreEqual("function_call", choice.FinishReason);
+        }
+
+        [TestMethod]
         public void GenerateParameters()
         {
             string emptyParameterJson = new ParameterCollection().ToJson();
