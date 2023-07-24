@@ -46,6 +46,8 @@ namespace ScriptRunnerTests
             List<ScriptCode> scripts = await directory.GetAllScriptsAsync();
             Assert.IsNotNull(scripts);
             Assert.AreEqual(1, scripts.Count);
+
+            Assert.AreEqual(1, directory.GetAllScriptNames().Count);
         }
     }
 }

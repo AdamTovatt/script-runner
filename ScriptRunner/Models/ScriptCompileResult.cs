@@ -82,5 +82,13 @@ namespace ScriptRunner.Models
 
             return null;
         }
+
+        public string GetErrorMessages()
+        {
+            if(Errors == null)
+                return string.Empty;
+
+            return string.Join("\n", Errors);
+        }
     }
 }

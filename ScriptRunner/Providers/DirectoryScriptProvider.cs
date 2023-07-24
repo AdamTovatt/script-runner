@@ -20,7 +20,11 @@ namespace ScriptRunner.Providers
             if (DirectoryPath.Length != 0 && !Directory.Exists(DirectoryPath))
                 return null;
 
-            string scriptPath = $"{Path.Combine(DirectoryPath, scriptName)}{ScriptFileExtension}";
+            string scriptPath;
+            if (!scriptName.EndsWith(ScriptFileExtension))
+                scriptPath = $"{Path.Combine(DirectoryPath, scriptName)}{ScriptFileExtension}";
+            else
+                scriptPath = $"{Path.Combine(DirectoryPath, scriptName)}";    
 
             if (!File.Exists(scriptPath))
                 return null;
@@ -50,16 +54,29 @@ namespace ScriptRunner.Providers
         {
             ScriptCompileResult compileResult = scriptCode.Compile();
 
-            if (compileResult.CompiledAssembly != null)
-            {
-                string scriptName = $"{compileResult.GetScriptType()}{ScriptFileExtension}";
-                string scriptPath = Path.Combine(DirectoryPath, scriptName);
+            if (compileResult.CompiledAssembly == null)
+                throw new Exception($"Can't save script with compilation errors! The error messages are: {compileResult.GetErrorMessages()}");
 
-                if(!Directory.Exists(DirectoryPath))
-                    Directory.CreateDirectory(DirectoryPath);
+            string scriptName = $"{compileResult.GetScriptType()}{ScriptFileExtension}";
+            string scriptPath = Path.Combine(DirectoryPath, scriptName);
 
-                await File.WriteAllTextAsync(scriptPath, scriptCode.Code);
-            }
+            if (!Directory.Exists(DirectoryPath))
+                Directory.CreateDirectory(DirectoryPath);
+
+            await File.WriteAllTextAsync(scriptPath, scriptCode.Code);
+        }
+
+        public List<string> GetAllScriptNames()
+        {
+            List<string> result = new List<string>();
+
+            if (DirectoryPath.Length != 0 && !Directory.Exists(DirectoryPath))
+                return result;
+
+            foreach (string file in Directory.GetFiles(DirectoryPath))
+                result.Add(file);
+
+            return result;
         }
 
         public static DirectoryScriptProvider CreateFromRelativePath(string relativePath)
