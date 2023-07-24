@@ -33,24 +33,31 @@ namespace OpenAi
             string jsonContent = completionParameter.ToJson();
             request.Content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
-            HttpResponseMessage response = await client.SendAsync(request);
-
-            if (response.IsSuccessStatusCode)
+            try
             {
-                CompletionResult? result = JsonSerializer.Deserialize<CompletionResult>(await response.Content.ReadAsStringAsync());
+                HttpResponseMessage response = await client.SendAsync(request);
 
-                if (result == null)
-                    throw new NullReferenceException($"Deserialized CompletionResult was unexpectedly null when completing based on the completion parameter {completionParameter}");
+                if (response.IsSuccessStatusCode)
+                {
+                    CompletionResult? result = JsonSerializer.Deserialize<CompletionResult>(await response.Content.ReadAsStringAsync());
 
-                return result;
+                    if (result == null)
+                        throw new NullReferenceException($"Deserialized CompletionResult was unexpectedly null when completing based on the completion parameter {completionParameter}");
+
+                    return result;
+                }
+                else if (response.StatusCode == System.Net.HttpStatusCode.ServiceUnavailable)
+                {
+                    Thread.Sleep(1000);
+                    return await CompleteAsync(completionParameter);
+                }
+
+                throw new CompletionException($"({response.StatusCode}) Error when completing based on the parameter {completionParameter}.\n{await response.Content.ReadAsStringAsync()}", response);
             }
-            else if (response.StatusCode == System.Net.HttpStatusCode.ServiceUnavailable)
+            catch (TimeoutException)
             {
-                Thread.Sleep(1000);
-                return await CompleteAsync(completionParameter);
+                throw new CompletionException("Error when creating an answer, the connection to OpenAi timed out.", null);
             }
-
-            throw new CompletionException($"({response.StatusCode}) Error when completing based on the parameter {completionParameter}.\n{await response.Content.ReadAsStringAsync()}", response);
         }
     }
 }

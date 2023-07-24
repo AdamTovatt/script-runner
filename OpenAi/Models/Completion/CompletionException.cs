@@ -2,9 +2,9 @@
 {
     public class CompletionException : Exception
     {
-        HttpResponseMessage HttpResponseMessage { get; set; }
+        HttpResponseMessage? HttpResponseMessage { get; set; }
 
-        public CompletionException(string message, HttpResponseMessage httpResponseMessage) : base(message)
+        public CompletionException(string message, HttpResponseMessage? httpResponseMessage) : base(message)
         {
             HttpResponseMessage = httpResponseMessage;
         }

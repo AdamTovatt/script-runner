@@ -5,7 +5,6 @@ using ScriptRunner;
 using ScriptRunner.Helpers;
 using ScriptRunner.Models;
 using ScriptRunner.Providers;
-using System.Drawing;
 
 namespace Console
 {
@@ -39,11 +38,9 @@ namespace Console
             string startPrompt = "You are a helpful assistant that will help the user in any way possible. " +
                                  "At your disposal you have a list of functions that you can call to help the user if it seems like the user needs it. " +
                                  "If a function needs to be called, make sure that you aquire the required parameters for the function. " +
-                                 "You can ask the user for the parameters. " + 
-                                 "If a users asks you to create a new script you can use the function for getting all available scripts. " +
-                                 "You can then read one of the scripts (or more than one if neccessary) to learn what a script looks like. " +
-                                 "When you have read an already existing script you can then create a new script following the same principles that you learned. " + 
-                                 "You will see this in the script that you read for inspiration, but for example, don't forget to add the xml comments. ";
+                                 "You can ask the user for the parameters. " +
+                                 "Always use the correct script structure when creating new scripts. " +
+                                 "If a user asks you to create a new script you should first load the DivideScript.cs and use that for inspiration for the new script.";
 
             parameter.AddSystemMessage(startPrompt);
 
