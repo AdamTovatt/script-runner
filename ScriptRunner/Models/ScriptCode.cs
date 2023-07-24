@@ -39,7 +39,7 @@ namespace ScriptRunner.Models
             CSharpCompilation compilation = CSharpCompilation.Create(
                 "runtimeCompiledAssembly",
                 new[] { syntaxTree },
-                ReferenceProvider.Instance.GetDefault(),
+                ReferenceProvider.Instance.GetReferences(),
                 new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary).WithUsings(NamespaceProvider.Instance.GetDefault()));
 
             using (MemoryStream dllStream = new MemoryStream())

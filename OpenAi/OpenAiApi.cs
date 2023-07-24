@@ -44,6 +44,11 @@ namespace OpenAi
 
                 return result;
             }
+            else if (response.StatusCode == System.Net.HttpStatusCode.ServiceUnavailable)
+            {
+                Thread.Sleep(1000);
+                return await CompleteAsync(completionParameter);
+            }
 
             throw new CompletionException($"({response.StatusCode}) Error when completing based on the parameter {completionParameter}.\n{await response.Content.ReadAsStringAsync()}", response);
         }

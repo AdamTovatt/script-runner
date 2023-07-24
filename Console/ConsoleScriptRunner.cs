@@ -4,6 +4,7 @@ using ScriptConverter;
 using ScriptRunner;
 using ScriptRunner.Models;
 using ScriptRunner.Providers;
+using System.Drawing;
 
 namespace Console
 {
@@ -28,13 +29,20 @@ namespace Console
         {
             OpenAiApi openAi = new OpenAiApi(EnvironmentHelper.GetOpenAiApiKey());
 
+            ReferenceProvider.Instance.AdditionalReferencesProvider = new DirectoryAdditionalReferencesProvider(); // set up additional references provider
+            ReferenceProvider.Instance.LoadAdditionalReferences();
+
             Conversation conversation = new Conversation();
             CompletionParameter parameter = conversation.CreateCompletionParameter(Model.Default);
 
             string startPrompt = "You are a helpful assistant that will help the user in any way possible. " +
                                  "At your disposal you have a list of functions that you can call to help the user if it seems like the user needs it. " +
                                  "If a function needs to be called, make sure that you aquire the required parameters for the function. " +
-                                 "You can ask the user for the parameters. ";
+                                 "You can ask the user for the parameters. " + 
+                                 "If a users asks you to create a new script you can use the function for getting all available scripts. " +
+                                 "You can then read one of the scripts (or more than one if neccessary) to learn what a script looks like. " +
+                                 "When you have read an already existing script you can then create a new script following the same principles that you learned. " + 
+                                 "You will see this in the script that you read for inspiration, but for example, don't forget to add the xml comments. ";
 
             parameter.AddSystemMessage(startPrompt);
 
@@ -70,7 +78,7 @@ namespace Console
                 string? userMessage = null;
                 if (shouldTakeUserInput)
                 {
-                    System.Console.Write("You: ");
+                    Print("You: ", ConsoleColor.Green, false);
                     userMessage = System.Console.ReadLine();
 
                     if (string.IsNullOrEmpty(userMessage)) continue;
@@ -94,12 +102,14 @@ namespace Console
 
                         if (functionCall == null)
                         {
-                            System.Console.WriteLine("(Was supposed to call function but function call was missing");
+                            Print("(Was supposed to call function but function call was missing)", ConsoleColor.Red);
                             continue;
                         }
 
                         if (functions.TryGetValue(functionCall.Name, out ScriptCompileResult? compileResult))
                         {
+                            Print($"(function call: {functionCall.Name})", ConsoleColor.Cyan);
+
                             CompiledScript compiledScript = compileResult.GetScript(new ScriptContext());
                             object? returnValue = compiledScript.Run(functionCall.Arguments);
 
@@ -111,10 +121,20 @@ namespace Console
                     }
                     else
                     {
-                        System.Console.WriteLine("Bot: " + choice.Message.Content);
+                        Print($"Bot: {choice.Message.Content}", ConsoleColor.Blue);
                     }
                 }
             }
+        }
+
+        private static void Print(string message, ConsoleColor color, bool includeLineBreak = true)
+        {
+            System.Console.ForegroundColor = color;
+
+            if (includeLineBreak)
+                System.Console.WriteLine(message);
+            else
+                System.Console.Write(message);
         }
     }
 }

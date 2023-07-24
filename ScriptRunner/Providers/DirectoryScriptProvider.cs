@@ -57,7 +57,7 @@ namespace ScriptRunner.Providers
             if (compileResult.CompiledAssembly == null)
                 throw new Exception($"Can't save script with compilation errors! The error messages are: {compileResult.GetErrorMessages()}");
 
-            string scriptName = $"{compileResult.GetScriptType()}{ScriptFileExtension}";
+            string scriptName = $"{compileResult.GetScriptType().Name}{ScriptFileExtension}";
             string scriptPath = Path.Combine(DirectoryPath, scriptName);
 
             if (!Directory.Exists(DirectoryPath))
