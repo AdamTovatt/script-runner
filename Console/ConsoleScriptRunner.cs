@@ -2,6 +2,7 @@
 using OpenAi.Models.Completion;
 using ScriptConverter;
 using ScriptRunner;
+using ScriptRunner.Helpers;
 using ScriptRunner.Models;
 using ScriptRunner.Providers;
 using System.Drawing;
@@ -113,7 +114,7 @@ namespace Console
                             CompiledScript compiledScript = compileResult.GetScript(new ScriptContext());
                             object? returnValue = compiledScript.Run(functionCall.Arguments);
 
-                            string returnValueAsString = returnValue?.ToString() ?? "null";
+                            string returnValueAsString = ReturnValueConverter.GetStringFromObject(returnValue);
 
                             parameter.AddSystemMessage($"Function call returned: {returnValueAsString}");
                             shouldTakeUserInput = false;

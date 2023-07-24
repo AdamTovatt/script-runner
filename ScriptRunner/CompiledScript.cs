@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text.Json.Nodes;
 
 namespace ScriptRunner
@@ -66,9 +67,27 @@ namespace ScriptRunner
                 methodParameters[i] = parameterResult;
             }
 
-            object? methodResult = startMethod.Invoke(this, methodParameters);
+            object? methodResult = null;
+            if (GetIsAsyncMethod(startMethod))
+            {
+                Task.Run(async () =>
+                {
+                    dynamic? task = startMethod.Invoke(this, methodParameters);
+                    if (task != null)
+                        methodResult = await task;
+                }).Wait();
+            }
+            else
+            {
+                methodResult = startMethod.Invoke(this, methodParameters);
+            }
 
             return methodResult;
+        }
+
+        private bool GetIsAsyncMethod(MethodInfo method)
+        {
+            return method.GetCustomAttribute(typeof(AsyncStateMachineAttribute)) != null;
         }
     }
 }
