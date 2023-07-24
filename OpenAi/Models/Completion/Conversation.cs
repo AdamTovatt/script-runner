@@ -12,10 +12,10 @@
 
         public void Add(CompletionParameter parameter)
         {
-            if(parameter.Messages == Messages)
+            if (parameter.Messages == Messages)
                 return;
 
-            foreach(Message message in parameter.Messages)
+            foreach (Message message in parameter.Messages)
             {
                 Messages.Add(message);
             }
@@ -23,15 +23,20 @@
 
         public void Add(CompletionResult result)
         {
-            foreach(Choice choice in result.Choices)
+            foreach (Choice choice in result.Choices)
             {
-                Messages.Add(choice.Message);
+                if (choice.FinishReason != FinishReason.FunctionCall)
+                    Messages.Add(choice.Message);
+                else
+                {
+                    Messages.Add(new Message(Role.Assistant, "(Calling function)"));
+                }
             }
         }
 
         public void Add(Function function)
         {
-            if(Functions == null)
+            if (Functions == null)
                 Functions = new List<Function>();
 
             Functions.Add(function);

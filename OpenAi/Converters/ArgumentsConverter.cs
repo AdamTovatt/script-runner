@@ -18,10 +18,11 @@ namespace OpenAi.Converters
             JsonSerializerOptions stringChunkOptions = new JsonSerializerOptions() { UnknownTypeHandling = JsonUnknownTypeHandling.JsonNode };
             return JsonSerializer.Deserialize<Dictionary<string, JsonNode>>(json, stringChunkOptions);
         }
-
+        //"{\n  \"factor1\": 2,\n  \"factor2\": 2\n}"
         public override void Write(Utf8JsonWriter writer, Dictionary<string, JsonNode>? value, JsonSerializerOptions options)
         {
-            throw new NotImplementedException();
+            string json = $"\"{JsonSerializer.Serialize(value).Replace("\"", "\\\"")}\"";
+            writer.WriteRawValue(json);
         }
     }
 }

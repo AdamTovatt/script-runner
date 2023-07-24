@@ -193,5 +193,17 @@ namespace OpenAiTests.Tests
 
             Assert.AreEqual("{\r\n  \"model\": \"gpt-3.5-turbo\",\r\n  \"messages\": [],\r\n  \"functions\": [\r\n    {\r\n      \"name\": \"GetTheCurrentTime\",\r\n      \"description\": \"Will get the current time\",\r\n      \"parameters\": {\"type\": \"object\", \"properties\": {\"timeZoneOffset\": {\"type\": \"number\", \"description\": \"The offset\"}}}\r\n    }\r\n  ],\r\n  \"function_call\": \"auto\"\r\n}", json);
         }
+
+        [TestMethod]
+        public void SerializeMessageWithArguments()
+        {
+            Message message = new Message("assistant", "testContent");
+            message.FunctionCall = new FunctionCall("GetTheCurrentTime", new Dictionary<string, JsonNode>());
+            message.FunctionCall.Arguments!.Add("timeZoneOffset", 0);
+
+            string json = JsonSerializer.Serialize(message);
+
+            Assert.AreEqual("{\"role\":\"assistant\",\"content\":\"testContent\",\"name\":null,\"function_call\":{\"name\":\"GetTheCurrentTime\",\"arguments\":\"{\\\"timeZoneOffset\\\":0}\"}}", json);
+        }
     }
 }

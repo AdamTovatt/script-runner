@@ -24,7 +24,7 @@ namespace ScriptConverter
             ParameterInfo[] parameters = startMethod.GetParameters();
 
             XmlComment? xmlComment = compileResult.GetXmlComment(GetMethodHeader(startMethod));
-            Function function = new Function($"{scriptType.Name}.{startMethod.Name}", xmlComment?.Summary ?? "");
+            Function function = new Function($"{startMethod.Name}", xmlComment?.Summary ?? "");
 
             foreach (ParameterInfo parameter in parameters)
             {

@@ -15,7 +15,6 @@
                 "System.Net",
                 "System.Linq",
                 "System.Text",
-                "System.Text.RegularExpressions",
                 "System.Collections.Generic"
             };
         }
