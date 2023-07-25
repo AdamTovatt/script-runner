@@ -2,12 +2,12 @@
 
 namespace ScriptRunner.Providers
 {
-    public class DirectoryScriptProvider : IScriptProvider
+    public class DirectoryCodeProvider : ICodeProvider
     {
         public string DirectoryPath { get; set; }
         public string ScriptFileExtension { get; set; } = ".cs";
 
-        public DirectoryScriptProvider(string directoryPath)
+        public DirectoryCodeProvider(string directoryPath)
         {
             DirectoryPath = directoryPath;
 
@@ -74,14 +74,14 @@ namespace ScriptRunner.Providers
                 return result;
 
             foreach (string file in Directory.GetFiles(DirectoryPath))
-                result.Add(file);
+                result.Add(Path.GetFileName(file));
 
             return result;
         }
 
-        public static DirectoryScriptProvider CreateFromRelativePath(string relativePath)
+        public static DirectoryCodeProvider CreateFromRelativePath(string relativePath)
         {
-            return new DirectoryScriptProvider(Path.Combine(Directory.GetCurrentDirectory(), relativePath));
+            return new DirectoryCodeProvider(Path.Combine(Directory.GetCurrentDirectory(), relativePath));
         }
     }
 }

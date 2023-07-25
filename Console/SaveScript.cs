@@ -17,7 +17,7 @@ namespace CustomScripts
         {
             try
             {
-                DirectoryScriptProvider directory = DirectoryScriptProvider.CreateFromRelativePath("scripts");
+                DirectoryCodeProvider directory = DirectoryCodeProvider.CreateFromRelativePath("scripts");
 
                 directory.SaveScriptAsync(new ScriptCode(content)).Wait();
 

@@ -24,6 +24,11 @@ namespace OpenAi
             client = new HttpClient();
         }
 
+        public async Task<CompletionResult> CompleteAsync(Conversation conversation)
+        {
+            return await CompleteAsync(conversation.CreateCompletionParameter());
+        }
+
         public async Task<CompletionResult> CompleteAsync(CompletionParameter completionParameter)
         {
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, completionUrl);

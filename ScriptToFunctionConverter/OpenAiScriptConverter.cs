@@ -2,6 +2,7 @@
 using OpenAi.Models.Completion.Parameters;
 using ScriptRunner;
 using ScriptRunner.Models;
+using ScriptRunner.Providers;
 using System.Reflection;
 using System.Text;
 
@@ -9,6 +10,52 @@ namespace ScriptConverter
 {
     public class OpenAiScriptConverter
     {
+        /// <summary>
+        /// Will get all the functions from a script provider
+        /// </summary>
+        /// <param name="scriptProvider">The script provider to use</param>
+        /// <returns>All the functions that the provider has</returns>
+        /// <exception cref="ConvertionException">Will throw a ConvertionException if any compilation errors occur. The error messages will be in the .Errors property of the exception object (List of string)</exception>
+        public static async Task<Dictionary<Function, ScriptCompileResult>> GetAllFunctionsAsync(ICodeProvider scriptProvider)
+        {
+            List<string> errors = new List<string>();
+            Dictionary<Function, ScriptCompileResult> result = new Dictionary<Function, ScriptCompileResult>();
+
+            List<ScriptCode> scripts = await scriptProvider.GetAllScriptsAsync();
+            List<Task> compileTasks = new List<Task>();
+
+            foreach (ScriptCode script in scripts)
+            {
+                compileTasks.Add(Task.Run(() =>
+                {
+                    ScriptCompileResult compileResult = script.Compile();
+
+                    if (compileResult.Errors != null)
+                    {
+                        lock (errors)
+                        {
+                            errors.Add($"{compileResult.GetErrorMessages()} for script: {script.Code}");
+                        }
+                    }
+
+                    if (compileResult.CompiledAssembly != null)
+                    {
+                        lock (result)
+                        {
+                            result.Add(GetAsFunction(compileResult), compileResult);
+                        }
+                    }
+                }));
+            }
+
+            await Task.WhenAll(compileTasks);
+
+            if (errors.Count > 0)
+                throw new ConvertionException(errors);
+
+            return result;
+        }
+
         public static Function GetAsFunction(ScriptCompileResult compileResult)
         {
             Type? scriptType = compileResult.GetScriptType();
@@ -49,7 +96,7 @@ namespace ScriptConverter
                 parameterBuilder.Append($"{ConvertToBasicTypeName(parameter.ParameterType.ToString())} {parameter.Name}, ");
             }
 
-            if(parameterBuilder.Length > 2)
+            if (parameterBuilder.Length > 2)
                 parameterBuilder.Length = parameterBuilder.Length - 2;
 
             return $"{name}({parameterBuilder})";

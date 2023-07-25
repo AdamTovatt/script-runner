@@ -2,7 +2,7 @@
 
 namespace ScriptRunner.Providers
 {
-    public interface IScriptProvider
+    public interface ICodeProvider
     {
         public Task<ScriptCode?> GetScriptAsync(string scriptName);
         public Task<List<ScriptCode>> GetAllScriptsAsync();

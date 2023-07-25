@@ -36,7 +36,7 @@ namespace ScriptRunnerTests
                                 }
                               }";
 
-            DirectoryScriptProvider directory = DirectoryScriptProvider.CreateFromRelativePath("custom-scripts");
+            DirectoryCodeProvider directory = DirectoryCodeProvider.CreateFromRelativePath("custom-scripts");
             await directory.SaveScriptAsync(new ScriptCode(script));
 
             ScriptCode? savedScript = await directory.GetScriptAsync("TestScript");

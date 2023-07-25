@@ -10,6 +10,13 @@ namespace Console
 {
     public class ConsoleScriptRunner
     {
+        private const string startPrompt = "You are a helpful assistant that will help the user in any way possible. " +
+                                        "At your disposal you have a list of functions that you can call to help the user if it seems like the user needs it. " +
+                                        "If a function needs to be called, make sure that you aquire the required parameters for the function. " +
+                                        "You can ask the user for the parameters. " +
+                                        "Always use the correct script structure when creating new scripts. " +
+                                        "If a user asks you to create a new script you should first load the DivideScript.cs and use that for inspiration for the new script.";
+
         static async Task Main(string[] args)
         {
             try
@@ -32,43 +39,18 @@ namespace Console
             ReferenceProvider.Instance.AdditionalReferencesProvider = new DirectoryAdditionalReferencesProvider(); // set up additional references provider
             ReferenceProvider.Instance.LoadAdditionalReferences();
 
-            Conversation conversation = new Conversation(Model.Gpt35Turbo16k, 2000);
-            CompletionParameter parameter = conversation.CreateCompletionParameter();
+            DirectoryCodeProvider directory = DirectoryCodeProvider.CreateFromRelativePath("scripts");
+            FunctionScriptLookup functionLookup = new FunctionScriptLookup(directory);
 
-            string startPrompt = "You are a helpful assistant that will help the user in any way possible. " +
-                                 "At your disposal you have a list of functions that you can call to help the user if it seems like the user needs it. " +
-                                 "If a function needs to be called, make sure that you aquire the required parameters for the function. " +
-                                 "You can ask the user for the parameters. " +
-                                 "Always use the correct script structure when creating new scripts. " +
-                                 "If a user asks you to create a new script you should first load the DivideScript.cs and use that for inspiration for the new script.";
-
-            parameter.AddSystemMessage(startPrompt);
-
-            DirectoryScriptProvider directory = DirectoryScriptProvider.CreateFromRelativePath("scripts");
-            List<ScriptCode> scripts = await directory.GetAllScriptsAsync();
-            Dictionary<string, ScriptCompileResult> functions = new Dictionary<string, ScriptCompileResult>();
-
-            foreach (ScriptCode script in scripts) // setup functions
+            if (await functionLookup.LoadFunctionsAsync() is List<string> errors && errors != null)
             {
-                ScriptCompileResult compileResult = script.Compile();
-
-                if (compileResult.Errors != null)
-                {
-                    compileResult.Errors.ForEach(x =>
-                    {
-                        System.Console.WriteLine(x);
-                    });
-
-                    return;
-                }
-
-                if (compileResult.CompiledAssembly != null)
-                {
-                    Function function = OpenAiScriptConverter.GetAsFunction(compileResult);
-                    parameter.AddFunction(function);
-                    functions.Add(function.Name, compileResult);
-                }
+                errors.ForEach(error => Print(error, ConsoleColor.Red));
+                return;
             }
+
+            Conversation conversation = new Conversation(Model.Gpt35Turbo16k, 2000);
+            conversation.SetFunctions(functionLookup.GetFunctions());
+            conversation.AddSystemMessage(startPrompt);
 
             bool shouldTakeUserInput = true;
             while (true)
@@ -81,10 +63,10 @@ namespace Console
 
                     if (string.IsNullOrEmpty(userMessage)) continue;
 
-                    parameter.AddUserMessage(userMessage);
+                    conversation.AddUserMessage(userMessage);
                 }
 
-                CompletionResult result = await openAi.CompleteAsync(parameter);
+                CompletionResult result = await openAi.CompleteAsync(conversation);
                 shouldTakeUserInput = true;
 
                 if (result == null)
@@ -99,21 +81,16 @@ namespace Console
                         FunctionCall? functionCall = choice.Message.FunctionCall;
 
                         if (functionCall == null)
-                        {
-                            Print("(Was supposed to call function but function call was missing)", ConsoleColor.Red);
-                            continue;
-                        }
+                            throw new Exception("Badly formatted answer from OpenAi. It said there would be a function call but the function was missing");
 
-                        if (functions.TryGetValue(functionCall.Name, out ScriptCompileResult? compileResult))
+                        if (functionLookup.TryGetCompileResult(functionCall.Name, out ScriptCompileResult compileResult))
                         {
                             Print($"(function call: {functionCall.Name})", ConsoleColor.Cyan);
 
                             CompiledScript compiledScript = compileResult.GetScript(new ScriptContext());
                             object? returnValue = compiledScript.Run(functionCall.Arguments);
 
-                            string returnValueAsString = ReturnValueConverter.GetStringFromObject(returnValue);
-
-                            parameter.AddSystemMessage($"Function call returned: {returnValueAsString}");
+                            conversation.AddSystemMessage($"Function call returned: {ReturnValueConverter.GetStringFromObject(returnValue)}");
                             shouldTakeUserInput = false;
                         }
                     }
