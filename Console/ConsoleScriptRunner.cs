@@ -88,7 +88,7 @@ namespace Console
                         {
                             Print($"(function call: {functionCall.Name})", ConsoleColor.Cyan);
 
-                            CompiledScript compiledScript = compileResult.GetScript(new ScriptContext());
+                            CompiledScript compiledScript = compileResult.GetScript(new ConsoleRunnerContext(functionLookup));
                             object? returnValue = compiledScript.Run(functionCall.Arguments);
 
                             conversation.AddSystemMessage($"Function call returned: {ReturnValueConverter.GetStringFromObject(returnValue)}");

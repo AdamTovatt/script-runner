@@ -33,10 +33,10 @@ namespace ScriptConverter
         {
             try
             {
+                Dictionary<Function, ScriptCompileResult> openAiScriptConverter = await OpenAiScriptConverter.GetAllFunctionsAsync(codeProvider);
+
                 functions.Clear();
                 scriptCompileResults.Clear();
-
-                Dictionary<Function, ScriptCompileResult> openAiScriptConverter = await OpenAiScriptConverter.GetAllFunctionsAsync(codeProvider);
 
                 foreach (KeyValuePair<Function, ScriptCompileResult> function in openAiScriptConverter)
                 {

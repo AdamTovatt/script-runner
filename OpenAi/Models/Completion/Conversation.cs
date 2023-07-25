@@ -66,13 +66,7 @@ namespace OpenAi.Models.Completion
 
         public void SetFunctions(List<Function> functions)
         {
-            if(Functions == null)
-                Functions = new List<Function>();
-
-            if(Functions.Count > 0)
-                Functions.Clear();
-
-            Functions.AddRange(functions);
+            Functions = functions;
         }
 
         /// <summary>
