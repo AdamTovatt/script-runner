@@ -102,7 +102,7 @@ namespace OpenAiTests.Tests
         {
             OpenAiApi openAi = new OpenAiApi(TestEnvironmentHelper.GetOpenAiApiKey());
 
-            Conversation conversation = new Conversation(Model.Default);
+            Conversation conversation = new Conversation(Model.Default, 2000);
 
             Function timeFunction = new Function("GetTimeInTimeZone", "Will get the time in the specified timezone");
             timeFunction.Parameters.Add(new Parameter("timeZoneOffset", typeof(int), "The timezone of the user"), true);
