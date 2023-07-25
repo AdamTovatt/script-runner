@@ -102,7 +102,7 @@ namespace OpenAiTests.Tests
         {
             OpenAiApi openAi = new OpenAiApi(TestEnvironmentHelper.GetOpenAiApiKey());
 
-            Conversation conversation = new Conversation();
+            Conversation conversation = new Conversation(Model.Default);
 
             Function timeFunction = new Function("GetTimeInTimeZone", "Will get the time in the specified timezone");
             timeFunction.Parameters.Add(new Parameter("timeZoneOffset", typeof(int), "The timezone of the user"), true);
@@ -112,7 +112,7 @@ namespace OpenAiTests.Tests
             writeFunction.Parameters.Add(new Parameter("valueToWrite", typeof(string), "The text to write to the database, has to be aquired from the user"), true);
             conversation.Add(writeFunction);
 
-            CompletionParameter parameter = conversation.CreateCompletionParameter(Model.Default);
+            CompletionParameter parameter = conversation.CreateCompletionParameter();
             parameter.AddSystemMessage("You have a number of functions at your disposal. If the user asks you for something that requires the use of a function you will make sure to get all the required parameters from the user and then call that function.");
             parameter.AddUserMessage("I would like write a text to the database");
 

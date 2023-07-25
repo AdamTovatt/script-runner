@@ -1,13 +1,22 @@
-﻿namespace OpenAi.Models.Completion
+﻿using OpenAi.Helpers;
+
+namespace OpenAi.Models.Completion
 {
     public class Conversation
     {
         public List<Message> Messages { get; set; }
         public List<Function>? Functions { get; set; }
+        public string Model { get; set; }
+        public int? TokenLimit { get; set; }
 
-        public Conversation()
+        private TokenCounter tokenCounter;
+
+        public Conversation(string model, int? tokenLimit)
         {
+            TokenLimit = tokenLimit;
+            Model = model;
             Messages = new List<Message>();
+            tokenCounter = new TokenCounter(model);
         }
 
         public void Add(CompletionParameter parameter)
@@ -32,6 +41,14 @@
                     Messages.Add(new Message(Role.Assistant, "(Calling function)"));
                 }
             }
+
+            if (TokenLimit != null && TokenLimit > 0)
+            {
+                while (tokenCounter.GetTokenCount(this) > TokenLimit)
+                {
+                    Messages.RemoveAt(0);
+                }
+            }
         }
 
         public void Add(Function function)
@@ -42,9 +59,9 @@
             Functions.Add(function);
         }
 
-        public CompletionParameter CreateCompletionParameter(string model)
+        public CompletionParameter CreateCompletionParameter()
         {
-            return new CompletionParameter(model, Messages, Functions);
+            return new CompletionParameter(Model, Messages, Functions);
         }
     }
 }

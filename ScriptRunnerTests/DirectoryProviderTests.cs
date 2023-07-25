@@ -39,7 +39,7 @@ namespace ScriptRunnerTests
             DirectoryScriptProvider directory = DirectoryScriptProvider.CreateFromRelativePath("custom-scripts");
             await directory.SaveScriptAsync(new ScriptCode(script));
 
-            ScriptCode? savedScript = await directory.GetScriptAsync("Test.TestScript");
+            ScriptCode? savedScript = await directory.GetScriptAsync("TestScript");
             Assert.IsNotNull(savedScript);
             Assert.AreEqual(script, savedScript.Code);
 

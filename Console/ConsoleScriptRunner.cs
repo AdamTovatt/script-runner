@@ -32,8 +32,8 @@ namespace Console
             ReferenceProvider.Instance.AdditionalReferencesProvider = new DirectoryAdditionalReferencesProvider(); // set up additional references provider
             ReferenceProvider.Instance.LoadAdditionalReferences();
 
-            Conversation conversation = new Conversation();
-            CompletionParameter parameter = conversation.CreateCompletionParameter(Model.Default);
+            Conversation conversation = new Conversation(Model.Gpt35Turbo16k, 2000);
+            CompletionParameter parameter = conversation.CreateCompletionParameter();
 
             string startPrompt = "You are a helpful assistant that will help the user in any way possible. " +
                                  "At your disposal you have a list of functions that you can call to help the user if it seems like the user needs it. " +
