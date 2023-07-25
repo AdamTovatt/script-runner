@@ -42,7 +42,9 @@ namespace OpenAi.Models.Completion
         {
             Model = model;
             Messages = messages;
-            Functions = functions;
+
+            if (functions != null && functions.Count > 0)
+                Functions = functions;
         }
 
         /// <summary>
@@ -97,7 +99,7 @@ namespace OpenAi.Models.Completion
         /// <param name="function">The function that can be called</param>
         public void AddFunction(Function function)
         {
-            if(Functions == null) 
+            if (Functions == null)
                 Functions = new List<Function>();
 
             Functions.Add(function);
