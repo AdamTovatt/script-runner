@@ -1,4 +1,5 @@
 ﻿using OpenAi.Helpers;
+using System.Text.Json;
 
 namespace OpenAi.Models.Completion
 {
@@ -35,10 +36,15 @@ namespace OpenAi.Models.Completion
             foreach (Choice choice in result.Choices)
             {
                 if (choice.FinishReason != FinishReason.FunctionCall)
-                    Messages.Add(choice.Message);
+                    Messages.Add(choice.Message!);
                 else
                 {
-                    Messages.Add(new Message(Role.Assistant, "(Calling function)"));
+                    string? functionArguments = null;
+
+                    if (choice.Message != null && choice.Message.FunctionCall != null && choice.Message.FunctionCall.Arguments != null)
+                        functionArguments = JsonSerializer.Serialize(choice.Message.FunctionCall.Arguments);
+
+                    Messages.Add(new Message(Role.Assistant, functionArguments == null ? "(Calling function)" : $"(Calling function, paramters: {functionArguments})"));
                 }
             }
 
