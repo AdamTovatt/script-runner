@@ -11,7 +11,7 @@ namespace OpenAi.Models.Completion
 
         private TokenCounter tokenCounter;
 
-        public Conversation(string model, int? tokenLimit)
+        public Conversation(string model, int? tokenLimit = null)
         {
             TokenLimit = tokenLimit;
             Model = model;

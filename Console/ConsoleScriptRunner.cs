@@ -15,7 +15,8 @@ namespace Console
                                         "If a function needs to be called, make sure that you aquire the required parameters for the function. " +
                                         "You can ask the user for the parameters. " +
                                         "Always use the correct script structure when creating new scripts. " +
-                                        "If a user asks you to create a new script you should first load the DivideScript.cs and use that for inspiration for the new script.";
+                                        "If a user asks you to create a new script you should first load the DivideScript.cs and use that for inspiration for the new script." +
+                                        "Don't use functions that doesn't exist. ";
 
         static async Task Main(string[] args)
         {
@@ -31,7 +32,7 @@ namespace Console
             System.Console.WriteLine("Application finished, press enter to exit...");
             System.Console.ReadLine();
         }
-
+        
         static async Task HandleConversation()
         {
             OpenAiApi openAi = new OpenAiApi(EnvironmentHelper.GetOpenAiApiKey());
@@ -48,7 +49,7 @@ namespace Console
                 return;
             }
 
-            Conversation conversation = new Conversation(Model.Gpt35Turbo16k, 2000);
+            Conversation conversation = new Conversation(Model.Gpt35Turbo16k, 15000);
             conversation.SetFunctions(functionLookup.GetFunctions());
             conversation.AddSystemMessage(startPrompt);
 

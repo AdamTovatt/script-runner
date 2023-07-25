@@ -26,10 +26,25 @@ namespace OpenAi
 
         public async Task<CompletionResult> CompleteAsync(Conversation conversation)
         {
-            return await CompleteAsync(conversation.CreateCompletionParameter());
+            int failCount = 0;
+
+            try
+            {
+                return await CompleteAsync(conversation.CreateCompletionParameter());
+            }
+            catch(Exception exception)
+            {
+                failCount++;
+                Type exceptionType = exception.GetType();
+
+                if ((exceptionType != typeof(HttpRequestException) && exceptionType != typeof(JsonException)) || failCount > 2)
+                    throw;
+
+                return await CompleteAsync(conversation);
+            }
         }
 
-        public async Task<CompletionResult> CompleteAsync(CompletionParameter completionParameter)
+        private async Task<CompletionResult> CompleteAsync(CompletionParameter completionParameter)
         {
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, completionUrl);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);

@@ -46,7 +46,7 @@ namespace ScriptConverterTests
             Function function = OpenAiScriptConverter.GetAsFunction(compileResult);
 
             Assert.AreEqual("This is a test script that multiplies two numbers and returns the result.", function.Description);
-            Assert.AreEqual("TestScript.Run", function.Name);
+            Assert.AreEqual("Run", function.Name);
             Assert.IsNotNull(function.Parameters);
             Assert.IsNotNull(function.Parameters.Parameters);
             Assert.AreEqual(3, function.Parameters.Parameters.Count);

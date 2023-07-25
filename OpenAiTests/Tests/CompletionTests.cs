@@ -42,11 +42,11 @@ namespace OpenAiTests.Tests
         {
             OpenAiApi openAi = new OpenAiApi(TestEnvironmentHelper.GetOpenAiApiKey());
 
-            CompletionParameter completionParameter = new CompletionParameter(Model.Default);
-            completionParameter.AddSystemMessage("The user will provide you with a word and you will write three words that have the same meaning");
-            completionParameter.AddUserMessage("happy");
+            Conversation conversation = new Conversation(Model.Default, 1000);
+            conversation.AddSystemMessage("The user will provide you with a word and you will write three words that have the same meaning");
+            conversation.AddUserMessage("happy");
 
-            CompletionResult completionResult = await openAi.CompleteAsync(completionParameter);
+            CompletionResult completionResult = await openAi.CompleteAsync(conversation);
 
             Assert.IsNotNull(completionResult);
             Assert.IsNotNull(completionResult.Model);
@@ -72,15 +72,15 @@ namespace OpenAiTests.Tests
         {
             OpenAiApi openAi = new OpenAiApi(TestEnvironmentHelper.GetOpenAiApiKey());
 
-            CompletionParameter completionParameter = new CompletionParameter(Model.Default);
+            Conversation conversation = new Conversation(Model.Default);
 
             Function function = new Function("GetTheCurrentTime", "Will get the current time");
             function.Parameters.Add(new Parameter("timeZoneOffset", typeof(int), "The timezone of the user"), true);
 
-            completionParameter.AddUserMessage("What is the current time?");
-            completionParameter.AddFunction(function);
+            conversation.AddUserMessage("What is the current time?");
+            conversation.Add(function);
 
-            CompletionResult completionResult = await openAi.CompleteAsync(completionParameter);
+            CompletionResult completionResult = await openAi.CompleteAsync(conversation);
 
             Assert.IsNotNull(completionResult);
             Assert.IsNotNull(completionResult.Choices);
@@ -112,11 +112,10 @@ namespace OpenAiTests.Tests
             writeFunction.Parameters.Add(new Parameter("valueToWrite", typeof(string), "The text to write to the database, has to be aquired from the user"), true);
             conversation.Add(writeFunction);
 
-            CompletionParameter parameter = conversation.CreateCompletionParameter();
-            parameter.AddSystemMessage("You have a number of functions at your disposal. If the user asks you for something that requires the use of a function you will make sure to get all the required parameters from the user and then call that function.");
-            parameter.AddUserMessage("I would like write a text to the database");
+            conversation.AddSystemMessage("You have a number of functions at your disposal. If the user asks you for something that requires the use of a function you will make sure to get all the required parameters from the user and then call that function.");
+            conversation.AddUserMessage("I would like write a text to the database");
 
-            CompletionResult completionResult = await openAi.CompleteAsync(parameter);
+            CompletionResult completionResult = await openAi.CompleteAsync(conversation);
             conversation.Add(completionResult);
 
             Assert.IsNotNull(completionResult);
@@ -127,8 +126,8 @@ namespace OpenAiTests.Tests
             Assert.IsNotNull(choice);
             Assert.AreEqual("stop", choice.FinishReason);
 
-            parameter.AddUserMessage("Yes, of course. I would like to write the text \"Hello World\" to the database");
-            completionResult = await openAi.CompleteAsync(parameter);
+            conversation.AddUserMessage("Yes, of course. I would like to write the text \"Hello World\" to the database");
+            completionResult = await openAi.CompleteAsync(conversation);
             conversation.Add(completionResult);
 
             Assert.IsNotNull(completionResult);
