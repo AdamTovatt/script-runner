@@ -11,7 +11,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScriptRunner", "ScriptRunne
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScriptRunnerTests", "ScriptRunnerTests\ScriptRunnerTests.csproj", "{23560E49-9FA0-4B5D-A82A-F2195EC11FFC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScriptConverter", "ScriptToFunctionConverter\ScriptConverter.csproj", "{4971B899-72B2-472F-B753-2197C1BB379F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScriptConverter", "ScriptConverter\ScriptConverter.csproj", "{4971B899-72B2-472F-B753-2197C1BB379F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScriptConverterTests", "ScriptConverterTests\ScriptConverterTests.csproj", "{1729A523-5378-4DD9-8819-FE06C009A585}"
 EndProject
