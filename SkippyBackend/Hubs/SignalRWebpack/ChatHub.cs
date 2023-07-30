@@ -9,6 +9,7 @@ using ScriptRunner;
 using ScriptRunner.Providers;
 using SkippyBackend.FrontEndModels;
 using SkippyBackend.Helpers;
+using SkippyBackend.Models;
 
 namespace SkippyBackend.Hubs.SignalRWebpack
 {
@@ -23,42 +24,73 @@ namespace SkippyBackend.Hubs.SignalRWebpack
                                 "If a user asks you to create a new script you should first load the DivideScript.cs and use that for inspiration for the new script." +
                                 "Don't use functions that doesn't exist. ";
 
-        public ChatConfiguration ChatConfiguration { get; set; }
-        public Conversation Conversation { get; set; }
-        public OpenAiApi OpenAi { get; set; }
-        public FunctionScriptLookup FunctionLookup { get; set; }
-        public DirectoryCodeProvider Directory { get; set; }
+        public static OpenAiApi OpenAi
+        {
+            get
+            {
+                if (openAi == null) openAi = new OpenAiApi(EnvironmentHelper.GetOpenAiApiKey());
+                return openAi;
+            }
+        }
+        private static OpenAiApi? openAi;
+
+        public static DirectoryCodeProvider DefaultScriptDirectory
+        {
+            get
+            {
+                if (defaultScriptDirectory == null) defaultScriptDirectory = DirectoryCodeProvider.CreateFromRelativePath("Scripts");
+                return defaultScriptDirectory;
+            }
+        }
+        private static DirectoryCodeProvider? defaultScriptDirectory;
+
+        public static FunctionScriptLookup FunctionLookup
+        {
+            get
+            {
+                if (functionLookup == null) functionLookup = new FunctionScriptLookup(DefaultScriptDirectory);
+                return functionLookup;
+            }
+        }
+        private static FunctionScriptLookup? functionLookup;
+
+        public ClientData CurrentClientData { get { return clientDataObjects[Context.ConnectionId]; } }
+
+        private static Dictionary<string, ClientData> clientDataObjects = new Dictionary<string, ClientData>();
+        private bool hasLoadedAdditionalReferences = false;
 
         public ChatHub()
         {
-            ChatConfiguration = new ChatConfiguration();
-
-            OpenAi = new OpenAiApi(EnvironmentHelper.GetOpenAiApiKey());
-
-            ReferenceProvider.Instance.AdditionalReferencesProvider = new DirectoryAdditionalReferencesProvider(); // set up additional references provider
-            ReferenceProvider.Instance.LoadAdditionalReferences();
-
-            Directory = DirectoryCodeProvider.CreateFromRelativePath("Scripts");
-            FunctionLookup = new FunctionScriptLookup(Directory);
-
-            Conversation = new Conversation(Model.Gpt35Turbo16k, 15000);
+            if (!hasLoadedAdditionalReferences)
+            {
+                ReferenceProvider.Instance.AdditionalReferencesProvider = new DirectoryAdditionalReferencesProvider(); // set up additional references provider
+                ReferenceProvider.Instance.LoadAdditionalReferences();
+                hasLoadedAdditionalReferences = true;
+            }
         }
 
         public override async Task OnConnectedAsync()
         {
             await base.OnConnectedAsync();
 
+            ChatConfiguration chatConfiguration = new ChatConfiguration();
+            Conversation conversation = new Conversation(Model.Gpt35Turbo16k, 15000);
+
+            // aquire the functions (compile them if needed)
             Task.Run(async () =>
             {
                 if (await FunctionLookup.LoadFunctionsAsync() is List<string> errors && errors != null)
                 {
-                    errors.ForEach(error => DisplayMessage(error, ChatConfiguration.Colors["Error"], 0));
+                    errors.ForEach(error => DisplayMessage(error, chatConfiguration.Colors["Error"], 0));
                     return;
                 }
             }).Wait();
 
-            Conversation.SetFunctions(FunctionLookup.GetFunctions());
-            Conversation.AddSystemMessage(startPrompt);
+            conversation.SetFunctions(FunctionLookup.GetFunctions());
+            conversation.AddSystemMessage(startPrompt);
+
+            ClientData clientData = new ClientData(chatConfiguration, conversation);
+            clientDataObjects.Add(Context.ConnectionId, clientData);
         }
 
         private void DisplayMessage(DisplayMessage displayMessage)
@@ -76,13 +108,18 @@ namespace SkippyBackend.Hubs.SignalRWebpack
         /// RPC
         public async Task NewMessage(string message)
         {
-            DisplayMessage(message, ChatConfiguration.Colors["Accent2"], 1);
+            DisplayMessage(message, CurrentClientData.ChatConfiguration.Colors["Accent2"], 1);
 
-            Conversation.AddUserMessage(message);
+            CurrentClientData.Conversation.AddUserMessage(message);
 
-            CompletionResult result = await OpenAi.CompleteAsync(Conversation);
+            await CompleteAsync();
+        }
 
-            Conversation.Add(result);
+        public async Task CompleteAsync()
+        {
+            CompletionResult result = await OpenAi.CompleteAsync(CurrentClientData.Conversation);
+
+            CurrentClientData.Conversation.Add(result);
 
             foreach (Choice choice in result.Choices)
             {
@@ -95,17 +132,19 @@ namespace SkippyBackend.Hubs.SignalRWebpack
 
                     if (FunctionLookup.TryGetCompileResult(functionCall.Name, out ScriptCompileResult compileResult))
                     {
-                        DisplayMessage($"(function call: {functionCall.Name})", ChatConfiguration.Colors["Success"], -1);
+                        DisplayMessage($"(function call: {functionCall.Name})", CurrentClientData.ChatConfiguration.Colors["Success"], 0);
 
                         CompiledScript compiledScript = compileResult.GetScript(new ScriptContext());
                         object? returnValue = compiledScript.Run(functionCall.Arguments);
 
-                        Conversation.AddSystemMessage($"Function call returned: {ReturnValueConverter.GetStringFromObject(returnValue)}");
+                        CurrentClientData.Conversation.AddSystemMessage($"Function call returned: {ReturnValueConverter.GetStringFromObject(returnValue)}");
+
+                        await CompleteAsync();
                     }
                 }
                 else
                 {
-                    DisplayMessage(choice.Message.Content, ChatConfiguration.Colors["Accent1"], -1);
+                    DisplayMessage(choice.Message.Content, CurrentClientData.ChatConfiguration.Colors["Accent1"], -1);
                 }
             }
         }
