@@ -1,0 +1,6 @@
+C:\Program Files\dotnet\shared\Microsoft.NETCore.App\6.0.14\System.Net.WebClient.dll
+C:\Program Files\dotnet\shared\Microsoft.NETCore.App\6.0.14\System.ComponentModel.Primitives.dll
+C:\Program Files\dotnet\shared\Microsoft.NETCore.App\6.0.14\System.Private.Uri.dll
+C:\Program Files\dotnet\shared\Microsoft.NETCore.App\6.0.14\System.Net.Http.dll
+C:\Program Files\dotnet\shared\Microsoft.NETCore.App\6.0.14\System.Net.dll
+C:\Program Files\dotnet\shared\Microsoft.NETCore.App\6.0.14\System.Diagnostics.Process.dll

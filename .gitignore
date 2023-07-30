@@ -3,6 +3,7 @@ OpenAi/bin/
 OpenAi/obj/
 ScriptRunner/bin/
 ScriptRunner/obj/
+SkippyBackend/Properties/launchSettings.json
 
 # Ignore Visual Studio files
 .vs/
