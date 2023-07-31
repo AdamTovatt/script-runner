@@ -1,4 +1,5 @@
 ﻿using ScriptRunner;
+using ScriptRunner.DocumentationAttributes;
 
 namespace Workflows.Scripts
 {
@@ -7,9 +8,11 @@ namespace Workflows.Scripts
         public StartWorkflowScript(ScriptContext context) : base(context) { }
 
         [ScriptStart]
-        public void StartWorkflow()
+        [Summary("Will start a workflow with the given name.")]
+        [Parameter("workflowName", "The name of the workflow to start.")]
+        public string StartWorkflow(string workflowName)
         {
-
+            return $"The workflow {workflowName} was started";
         }
     }
 }

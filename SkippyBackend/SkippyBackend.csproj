@@ -29,10 +29,7 @@
     <ProjectReference Include="..\OpenAi\OpenAi.csproj" />
     <ProjectReference Include="..\ScriptConverter\ScriptConverter.csproj" />
     <ProjectReference Include="..\ScriptRunner\ScriptRunner.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Scripts\" />
+    <ProjectReference Include="..\Workflows\Workflows.csproj" />
   </ItemGroup>
 
 </Project>

@@ -10,6 +10,8 @@ using ScriptRunner.Providers;
 using SkippyBackend.FrontEndModels;
 using SkippyBackend.Helpers;
 using SkippyBackend.Models;
+using Workflows.Scripts;
+using SkippyBackend.PrecompiledScripts;
 
 namespace SkippyBackend.Hubs.SignalRWebpack
 {
@@ -48,7 +50,14 @@ namespace SkippyBackend.Hubs.SignalRWebpack
         {
             get
             {
-                if (functionLookup == null) functionLookup = new FunctionScriptLookup(DefaultScriptDirectory);
+                if (functionLookup == null) functionLookup = 
+                        new FunctionScriptLookup(
+                            DefaultScriptDirectory, 
+                            new PreCompiledScriptProvider(
+                                typeof(StartWorkflowScript), 
+                                typeof(GetAvailableFunctionsScript)
+                                )
+                            );
                 return functionLookup;
             }
         }
@@ -139,7 +148,7 @@ namespace SkippyBackend.Hubs.SignalRWebpack
                     {
                         DisplayMessage($"(function call: {functionCall.Name})", CurrentClientData.ChatConfiguration.Colors["Success"], 0);
 
-                        CompiledScript compiledScript = scriptContainer.GetCompiledScript(new ScriptContext());
+                        CompiledScript compiledScript = scriptContainer.GetCompiledScript(new SkippyContext(FunctionLookup, CurrentClientData));
                         object? returnValue = compiledScript.Run(functionCall.Arguments);
 
                         CurrentClientData.Conversation.AddSystemMessage($"Function call returned: {ReturnValueConverter.GetStringFromObject(returnValue)}");
