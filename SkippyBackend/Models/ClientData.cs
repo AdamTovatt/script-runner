@@ -1,4 +1,4 @@
-﻿using OpenAi.Models.Completion;
+﻿using ScriptRunner.OpenAi.Models.Completion;
 using SkippyBackend.FrontEndModels;
 
 namespace SkippyBackend.Models

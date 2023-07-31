@@ -1,5 +1,5 @@
-﻿using ScriptConverter;
-using Workflows;
+﻿using ScriptRunner.ScriptConvertion;
+using ScriptRunner.Workflows;
 
 namespace SkippyBackend.Models
 {
@@ -8,7 +8,7 @@ namespace SkippyBackend.Models
         public FunctionScriptLookup ScriptLookup { get; set; }
         public ClientData ClientData { get; set; }
 
-        public SkippyContext(FunctionScriptLookup scriptLookup, ClientData clientData) : base(clientData.Conversation, null, null)
+        public SkippyContext(FunctionScriptLookup scriptLookup, ClientData clientData) : base(clientData.Conversation)
         {
             ScriptLookup = scriptLookup;
             ClientData = clientData;

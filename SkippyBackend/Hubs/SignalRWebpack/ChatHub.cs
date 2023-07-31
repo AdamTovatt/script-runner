@@ -1,8 +1,5 @@
 ﻿using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.SignalR;
-using OpenAi;
-using OpenAi.Models.Completion;
-using ScriptConverter;
 using ScriptRunner.Helpers;
 using ScriptRunner.Models;
 using ScriptRunner;
@@ -10,8 +7,11 @@ using ScriptRunner.Providers;
 using SkippyBackend.FrontEndModels;
 using SkippyBackend.Helpers;
 using SkippyBackend.Models;
-using Workflows.Scripts;
 using SkippyBackend.PrecompiledScripts;
+using ScriptRunner.ScriptConvertion;
+using ScriptRunner.OpenAi;
+using ScriptRunner.Workflows.Scripts;
+using ScriptRunner.OpenAi.Models.Completion;
 
 namespace SkippyBackend.Hubs.SignalRWebpack
 {

@@ -1,6 +1,7 @@
 ﻿using OpenAi.Models.Completion;
 using ScriptRunner;
 using ScriptRunner.Models;
+using ScriptRunner.OpenAi.Models.Completion;
 using ScriptRunner.Providers;
 using SkippyBackend.Models;
 using System;
