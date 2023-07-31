@@ -135,11 +135,11 @@ namespace SkippyBackend.Hubs.SignalRWebpack
                     if (functionCall == null)
                         throw new Exception("Badly formatted answer from OpenAi. It said there would be a function call but the function was missing");
 
-                    if (FunctionLookup.TryGetCompiledScriptContainer(functionCall.Name, out ICompiledScriptContainer compileResult))
+                    if (FunctionLookup.TryGetCompiledScriptContainer(functionCall.Name, out ICompiledScriptContainer scriptContainer))
                     {
                         DisplayMessage($"(function call: {functionCall.Name})", CurrentClientData.ChatConfiguration.Colors["Success"], 0);
 
-                        CompiledScript compiledScript = compileResult.GetCompiledScript(new ScriptContext());
+                        CompiledScript compiledScript = scriptContainer.GetCompiledScript(new ScriptContext());
                         object? returnValue = compiledScript.Run(functionCall.Arguments);
 
                         CurrentClientData.Conversation.AddSystemMessage($"Function call returned: {ReturnValueConverter.GetStringFromObject(returnValue)}");

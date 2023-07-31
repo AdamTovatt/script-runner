@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using ScriptRunner.Helpers;
+using System.Reflection;
 
 namespace ScriptRunner.Models
 {
@@ -72,8 +73,10 @@ namespace ScriptRunner.Models
             throw new Exception($"The compiled assembly {CompiledAssembly.FullName} is missing a type that is a type of CompiledScript");
         }
 
-        public ICommentProvider? GetCommentProvider(string methodHeader)
+        public ICommentProvider? GetCommentProvider(MethodInfo method)
         {
+            string methodHeader = MethodInfoConverter.GetMethodHeader(method);
+
             if(XmlComments == null)
                 return null;
 

@@ -1,5 +1,8 @@
 using ScriptRunner;
+using ScriptRunner.DocumentationAttributes;
 using ScriptRunner.Models;
+using ScriptRunner.Providers;
+using System.Reflection;
 using System.Text.Json.Nodes;
 
 namespace ScriptRunnerTests
@@ -57,6 +60,65 @@ namespace ScriptRunnerTests
             object? result = compiledScript.Run(parameters);
 
             Assert.AreEqual("Benim: 420", result);
+        }
+
+        [TestMethod]
+        public void UsePrecompiledScript()
+        {
+            PreCompiledScriptProvider scriptProvider1 = new PreCompiledScriptProvider(new PreCompiledScript(typeof(TestScript)), new PreCompiledScript(typeof(TestScript2)));
+            PreCompiledScriptProvider scriptProvider2 = new PreCompiledScriptProvider(typeof(TestScript), typeof(TestScript2));
+
+            List<ICompiledScriptContainer> scripts1 = scriptProvider1.GetCompiledScripts();
+            List<ICompiledScriptContainer> scripts2 = scriptProvider2.GetCompiledScripts();
+
+            Assert.IsNotNull(scripts1);
+            Assert.IsNotNull(scripts2);
+
+            Assert.AreEqual(2, scripts1.Count);
+            Assert.AreEqual(2, scripts2.Count);
+
+            Assert.AreEqual(typeof(TestScript), scripts1[0].GetScriptType());
+            Assert.AreEqual(typeof(TestScript2), scripts1[1].GetScriptType());
+
+            Assert.AreEqual(typeof(TestScript), scripts2[0].GetScriptType());
+            Assert.AreEqual(typeof(TestScript2), scripts2[1].GetScriptType());
+
+            ICompiledScriptContainer testScript = scripts2[0];
+            ICommentProvider? commentProvider = testScript.GetCommentProvider(testScript.GetScriptType().GetMethods().First(x => x.GetCustomAttribute<ScriptStart>() != null));
+
+            Assert.IsNotNull(commentProvider);
+            Assert.AreEqual("This is a test script", commentProvider.Summary);
+            Assert.AreEqual("The first number to multiply", commentProvider.GetParameterDescription("factor1"));
+            Assert.AreEqual("The second number to multiply", commentProvider.GetParameterDescription("factor2"));
+            Assert.AreEqual("The username of the user", commentProvider.GetParameterDescription("userName"));
+        }
+    }
+
+    public class TestScript : CompiledScript
+    {
+        public TestScript(ScriptContext context) : base(context) { }
+
+        [ScriptStart]
+        [Summary("This is a test script")]
+        [Parameter("factor1", "The first number to multiply")]
+        [Parameter("factor2", "The second number to multiply")]
+        [Parameter("userName", "The username of the user")]
+        public object Run(int factor1, int factor2, string userName)
+        {
+            int result = factor1 * factor2;
+            return $"{userName}: {result}";
+        }
+    }
+
+    public class TestScript2 : CompiledScript
+    {
+        public TestScript2(ScriptContext context) : base (context) { }
+
+        [ScriptStart]
+        [Summary("This is a hello world script")]
+        public string Run()
+        {
+            return "Hello World!";
         }
     }
 }

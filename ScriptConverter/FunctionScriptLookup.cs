@@ -13,19 +13,28 @@ namespace ScriptConverter
         private Dictionary<string, ICompiledScriptContainer> scriptCompileResults;
         private List<Function> functions;
         private List<ICodeProvider> codeProviders;
+        private List<ICompiledScriptProvider> compiledScriptProviders;
 
         /// <summary>
         /// Will create a new instance of the FunctionScriptLookup class based on the given code providers
         /// </summary>
-        /// <param name="codeProviders">The code providers to create this lookup from</param>
-        public FunctionScriptLookup(params ICodeProvider[] codeProviders)
+        /// <param name="codeAndScriptProviders">The code providers and script providers to create this lookup from</param>
+        public FunctionScriptLookup(params ICodeOrScriptProvider[] codeAndScriptProviders)
         {
             scriptCompileResults = new Dictionary<string, ICompiledScriptContainer>();
             functions = new List<Function>();
-            this.codeProviders = new List<ICodeProvider>();
+            codeProviders = new List<ICodeProvider>();
+            compiledScriptProviders = new List<ICompiledScriptProvider>();
 
-            foreach (ICodeProvider codeProvider in codeProviders)
-                this.codeProviders.Add(codeProvider);
+            foreach (ICodeOrScriptProvider provider in codeAndScriptProviders)
+            {
+                if (provider is ICompiledScriptProvider scriptProvider)
+                    compiledScriptProviders.Add(scriptProvider);
+                else if(provider is ICodeProvider codeProvider)
+                    codeProviders.Add(codeProvider);
+                else
+                    throw new NotSupportedException($"The given code or script provider ({provider.GetType().Name}) is not a valid code or script provider");
+            }
         }
 
         /// <summary>
@@ -44,6 +53,17 @@ namespace ScriptConverter
 
                     foreach (KeyValuePair<Function, ScriptCompileResult> function in openAiScriptConverter)
                         functionsScriptMap.Add(function.Key, function.Value); // add all the compile results
+                }
+
+                foreach(ICompiledScriptProvider compiledScriptProvider in compiledScriptProviders)
+                {
+                    foreach (ICompiledScriptContainer compiledScriptContainer in compiledScriptProvider.GetCompiledScripts())
+                    {
+                        if (compiledScriptContainer is ICompiledScriptContainer compiledScript)
+                            functionsScriptMap.Add(OpenAiScriptConverter.GetAsFunction(compiledScript), compiledScript);
+                        else
+                            throw new Exception($"The compiled script container ({compiledScriptContainer.GetType().Name}) is not a valid compiled script container");
+                    }
                 }
 
                 functions.Clear();
