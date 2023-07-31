@@ -133,33 +133,47 @@ namespace SkippyBackend.Hubs.SignalRWebpack
 
         public async Task CompleteAsync()
         {
-            CompletionResult result = await OpenAi.CompleteAsync(CurrentClientData.Conversation);
-
-            foreach (Choice choice in result.Choices)
+            try
             {
-                if (choice.FinishReason == FinishReason.FunctionCall)
+                CompletionResult result = await OpenAi.CompleteAsync(CurrentClientData.Conversation);
+
+                foreach (Choice choice in result.Choices)
                 {
-                    FunctionCall? functionCall = choice.Message.FunctionCall;
-
-                    if (functionCall == null)
-                        throw new Exception("Badly formatted answer from OpenAi. It said there would be a function call but the function was missing");
-
-                    if (FunctionLookup.TryGetCompiledScriptContainer(functionCall.Name, out ICompiledScriptContainer scriptContainer))
+                    if (choice.FinishReason == FinishReason.FunctionCall)
                     {
-                        DisplayMessage($"(function call: {functionCall.Name})", CurrentClientData.ChatConfiguration.Colors["Success"], 0);
+                        FunctionCall? functionCall = choice.Message.FunctionCall;
 
-                        CompiledScript compiledScript = scriptContainer.GetCompiledScript(new SkippyContext(FunctionLookup, CurrentClientData));
-                        object? returnValue = compiledScript.Run(functionCall.Arguments);
+                        if (functionCall == null)
+                            throw new Exception("Badly formatted answer from OpenAi. It said there would be a function call but the function was missing");
 
-                        CurrentClientData.Conversation.AddSystemMessage($"Function call returned: {ReturnValueConverter.GetStringFromObject(returnValue)}");
+                        if (FunctionLookup.TryGetCompiledScriptContainer(functionCall.Name, out ICompiledScriptContainer scriptContainer))
+                        {
+                            DisplayMessage($"(function call: {functionCall.Name})", CurrentClientData.ChatConfiguration.Colors["Success"], 0);
 
-                        await CompleteAsync();
+                            CompiledScript compiledScript = scriptContainer.GetCompiledScript(new SkippyContext(FunctionLookup, CurrentClientData));
+
+                            try
+                            {
+                                object? returnValue = compiledScript.Run(functionCall.Arguments);
+                                CurrentClientData.Conversation.AddSystemMessage($"Function call returned: {ReturnValueConverter.GetStringFromObject(returnValue)}");
+                            }
+                            catch (Exception exception)
+                            {
+                                CurrentClientData.Conversation.AddSystemMessage($"The function threw an exception and the user needs to be informed: {exception.Message} {exception.InnerException?.Message}");
+                            }
+
+                            await CompleteAsync();
+                        }
+                    }
+                    else
+                    {
+                        DisplayMessage(choice.Message.Content, CurrentClientData.ChatConfiguration.Colors["Accent1"], -1);
                     }
                 }
-                else
-                {
-                    DisplayMessage(choice.Message.Content, CurrentClientData.ChatConfiguration.Colors["Accent1"], -1);
-                }
+            }
+            catch(Exception exception)
+            {
+                DisplayMessage($"{exception.Message} {exception.InnerException?.Message}", CurrentClientData.ChatConfiguration.Colors["Error"], 0);
             }
         }
     }
