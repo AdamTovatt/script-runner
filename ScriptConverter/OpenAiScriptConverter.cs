@@ -56,7 +56,7 @@ namespace ScriptConverter
             return result;
         }
 
-        public static Function GetAsFunction(ScriptCompileResult compileResult)
+        public static Function GetAsFunction(ICompiledScriptContainer compileResult)
         {
             Type? scriptType = compileResult.GetScriptType();
 
@@ -70,15 +70,15 @@ namespace ScriptConverter
 
             ParameterInfo[] parameters = startMethod.GetParameters();
 
-            XmlComment? xmlComment = compileResult.GetXmlComment(GetMethodHeader(startMethod));
-            Function function = new Function($"{startMethod.Name}", xmlComment?.Summary ?? "");
+            ICommentProvider? comment = compileResult.GetCommentProvider(GetMethodHeader(startMethod));
+            Function function = new Function($"{startMethod.Name}", comment?.Summary ?? "");
 
             foreach (ParameterInfo parameter in parameters)
             {
                 if (parameter.Name == null) continue;
 
                 string parameterName = parameter.Name;
-                string? parameterDescription = xmlComment?.GetParameterDescription(parameter.Name);
+                string? parameterDescription = comment?.GetParameterDescription(parameter.Name);
                 function.Parameters.Add(new Parameter(parameterName, parameter.ParameterType, parameterDescription ?? ""), true);
             }
 

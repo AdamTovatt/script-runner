@@ -9,6 +9,8 @@ namespace OpenAi.Models.Completion
         public List<Function>? Functions { get; set; }
         public string Model { get; set; }
         public int? TokenLimit { get; set; }
+        public Conversation? ParentConversation { get; set; }
+        public Conversation? ChildConversation { get; set; }
 
         private TokenCounter tokenCounter;
 
@@ -44,7 +46,7 @@ namespace OpenAi.Models.Completion
                     if (choice.Message != null && choice.Message.FunctionCall != null && choice.Message.FunctionCall.Arguments != null)
                         functionArguments = JsonSerializer.Serialize(choice.Message.FunctionCall.Arguments);
 
-                    Messages.Add(new Message(Role.Assistant, functionArguments == null ? "(Calling function)" : $"(Calling function, paramters: {functionArguments})"));
+                    Messages.Add(new Message(Role.System, functionArguments == null ? "(Calling function)" : $"(Calling function, paramters: {functionArguments})"));
                 }
             }
 
@@ -109,6 +111,21 @@ namespace OpenAi.Models.Completion
         public void AddUserMessage(string content)
         {
             Messages.Add(new Message(Role.User, content));
+        }
+
+        public void SetChildConversation(Conversation conversation)
+        {
+            ChildConversation = conversation;
+        }
+
+        public void SetParentConversation(Conversation conversation)
+        {
+            ParentConversation = conversation;
+        }
+
+        public void RemoveChildConversation()
+        {
+            ChildConversation = null;
         }
     }
 }

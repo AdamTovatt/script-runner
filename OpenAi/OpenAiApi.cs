@@ -24,23 +24,40 @@ namespace OpenAi
             client = new HttpClient();
         }
 
-        public async Task<CompletionResult> CompleteAsync(Conversation conversation)
+        /// <summary>
+        /// Will complete in a conversation. Will use the inner most child conversations if there are any
+        /// </summary>
+        /// <param name="conversation">The conversation to complete</param>
+        /// <param name="addResultToConversation">Wether or not the result of the completion should be added to the conversation straight away. The default is true and this is recommended since it will make sure that the result is added to the right conversation then</param>
+        /// <param name="allowedFailCount">How many times the completion is allowed to fail before it will throw an exception. The default is 2. This means that if there is an error from open ai it will automatically try again</param>
+        /// <returns></returns>
+        public async Task<CompletionResult> CompleteAsync(Conversation conversation, bool addResultToConversation = true, int allowedFailCount = 2)
         {
+            Conversation targetConversation = conversation;
+
+            while(targetConversation.ChildConversation != null) // always take the inner most conversation
+                targetConversation = targetConversation.ChildConversation;
+
             int failCount = 0;
 
             try
             {
-                return await CompleteAsync(conversation.CreateCompletionParameter());
+                CompletionResult result = await CompleteAsync(targetConversation.CreateCompletionParameter());
+                
+                if (addResultToConversation)
+                    targetConversation.Add(result);
+
+                return result;
             }
             catch(Exception exception)
             {
                 failCount++;
                 Type exceptionType = exception.GetType();
 
-                if ((exceptionType != typeof(HttpRequestException) && exceptionType != typeof(JsonException)) || failCount > 2)
+                if ((exceptionType != typeof(HttpRequestException) && exceptionType != typeof(JsonException)) || failCount > allowedFailCount)
                     throw;
 
-                return await CompleteAsync(conversation);
+                return await CompleteAsync(targetConversation);
             }
         }
 

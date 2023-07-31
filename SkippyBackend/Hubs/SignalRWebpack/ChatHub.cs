@@ -77,14 +77,21 @@ namespace SkippyBackend.Hubs.SignalRWebpack
             Conversation conversation = new Conversation(Model.Gpt35Turbo16k, 15000);
 
             // aquire the functions (compile them if needed)
-            Task.Run(async () =>
+            try
             {
-                if (await FunctionLookup.LoadFunctionsAsync() is List<string> errors && errors != null)
+                Task.Run(async () =>
                 {
-                    errors.ForEach(error => DisplayMessage(error, chatConfiguration.Colors["Error"], 0));
-                    return;
-                }
-            }).Wait();
+                    if (await FunctionLookup.LoadFunctionsAsync() is List<string> errors && errors != null)
+                    {
+                        errors.ForEach(error => DisplayMessage(error, chatConfiguration.Colors["Error"], 0));
+                        return;
+                    }
+                }).Wait();
+            }
+            catch(Exception exception)
+            {
+                DisplayMessage(exception.Message, chatConfiguration.Colors["Error"], 0);
+            }
 
             conversation.SetFunctions(FunctionLookup.GetFunctions());
             conversation.AddSystemMessage(startPrompt);
@@ -119,8 +126,6 @@ namespace SkippyBackend.Hubs.SignalRWebpack
         {
             CompletionResult result = await OpenAi.CompleteAsync(CurrentClientData.Conversation);
 
-            CurrentClientData.Conversation.Add(result);
-
             foreach (Choice choice in result.Choices)
             {
                 if (choice.FinishReason == FinishReason.FunctionCall)
@@ -130,11 +135,11 @@ namespace SkippyBackend.Hubs.SignalRWebpack
                     if (functionCall == null)
                         throw new Exception("Badly formatted answer from OpenAi. It said there would be a function call but the function was missing");
 
-                    if (FunctionLookup.TryGetCompileResult(functionCall.Name, out ScriptCompileResult compileResult))
+                    if (FunctionLookup.TryGetCompiledScriptContainer(functionCall.Name, out ICompiledScriptContainer compileResult))
                     {
                         DisplayMessage($"(function call: {functionCall.Name})", CurrentClientData.ChatConfiguration.Colors["Success"], 0);
 
-                        CompiledScript compiledScript = compileResult.GetScript(new ScriptContext());
+                        CompiledScript compiledScript = compileResult.GetCompiledScript(new ScriptContext());
                         object? returnValue = compiledScript.Run(functionCall.Arguments);
 
                         CurrentClientData.Conversation.AddSystemMessage($"Function call returned: {ReturnValueConverter.GetStringFromObject(returnValue)}");

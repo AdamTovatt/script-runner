@@ -2,7 +2,7 @@
 
 namespace ScriptRunner.Models
 {
-    public class XmlComment
+    public class XmlComment : ICommentProvider
     {
         public string? Summary { get; set; }
         public Dictionary<string, string>? Parameters { get; set; }

@@ -5,7 +5,7 @@ namespace ScriptRunner.Models
     /// <summary>
     /// Represents the result of a script compilation
     /// </summary>
-    public class ScriptCompileResult
+    public class ScriptCompileResult : ICompiledScriptContainer
     {
         /// <summary>
         /// The resulting assembly
@@ -33,7 +33,7 @@ namespace ScriptRunner.Models
         /// <param name="scriptContext">The context create the script in, the context can be used to provide the script with nice stuff</param>
         /// <returns>An instance of a class that inherits from CompiledScript (probably)</returns>
         /// <exception cref="Exception">Will throw an exception if no CompiledAssembly exists or if no type that inherits from CompiledScript was found</exception>
-        public CompiledScript GetScript(ScriptContext scriptContext)
+        public CompiledScript GetCompiledScript(ScriptContext scriptContext)
         {
             if (CompiledAssembly == null)
                 throw new Exception("Tried to get script from a ScriptCompileResult without any CompiledAssembly. Check for null on the CompiledAssembly before calling GetScript()!");
@@ -56,7 +56,7 @@ namespace ScriptRunner.Models
         /// </summary>
         /// <returns>The type if it is found, null if it is not found</returns>
         /// <exception cref="Exception">Will throw an exception if the compiled assembly is null, this method should only be used when the compilation was successfull</exception>
-        public Type? GetScriptType()
+        public Type GetScriptType()
         {
             if (CompiledAssembly == null)
                 throw new Exception("Tried to get script type from a ScriptCompileResult without any CompiledAssembly. Check for null on the CompiledAssembly before calling GetScript()!");
@@ -69,10 +69,10 @@ namespace ScriptRunner.Models
                 }
             }
 
-            return null;
+            throw new Exception($"The compiled assembly {CompiledAssembly.FullName} is missing a type that is a type of CompiledScript");
         }
 
-        public XmlComment? GetXmlComment(string methodHeader)
+        public ICommentProvider? GetCommentProvider(string methodHeader)
         {
             if(XmlComments == null)
                 return null;

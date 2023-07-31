@@ -84,11 +84,11 @@ namespace Console
                         if (functionCall == null)
                             throw new Exception("Badly formatted answer from OpenAi. It said there would be a function call but the function was missing");
 
-                        if (functionLookup.TryGetCompileResult(functionCall.Name, out ScriptCompileResult compileResult))
+                        if (functionLookup.TryGetCompiledScriptContainer(functionCall.Name, out ICompiledScriptContainer compileResult))
                         {
                             Print($"(function call: {functionCall.Name})", ConsoleColor.Cyan);
 
-                            CompiledScript compiledScript = compileResult.GetScript(new ConsoleRunnerContext(functionLookup));
+                            CompiledScript compiledScript = compileResult.GetCompiledScript(new ConsoleRunnerContext(functionLookup));
                             object? returnValue = compiledScript.Run(functionCall.Arguments);
 
                             conversation.AddSystemMessage($"Function call returned: {ReturnValueConverter.GetStringFromObject(returnValue)}");

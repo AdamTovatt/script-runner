@@ -10,19 +10,22 @@ namespace ScriptConverter
     /// </summary>
     public class FunctionScriptLookup
     {
-        private Dictionary<string, ScriptCompileResult> scriptCompileResults;
+        private Dictionary<string, ICompiledScriptContainer> scriptCompileResults;
         private List<Function> functions;
-        private ICodeProvider codeProvider;
+        private List<ICodeProvider> codeProviders;
 
         /// <summary>
-        /// Will create a new instance of the FunctionScriptLookup class based on a code provider
+        /// Will create a new instance of the FunctionScriptLookup class based on the given code providers
         /// </summary>
-        /// <param name="codeProvider"></param>
-        public FunctionScriptLookup(ICodeProvider codeProvider)
+        /// <param name="codeProviders">The code providers to create this lookup from</param>
+        public FunctionScriptLookup(params ICodeProvider[] codeProviders)
         {
-            scriptCompileResults = new Dictionary<string, ScriptCompileResult>();
+            scriptCompileResults = new Dictionary<string, ICompiledScriptContainer>();
             functions = new List<Function>();
-            this.codeProvider = codeProvider;
+            this.codeProviders = new List<ICodeProvider>();
+
+            foreach (ICodeProvider codeProvider in codeProviders)
+                this.codeProviders.Add(codeProvider);
         }
 
         /// <summary>
@@ -33,15 +36,23 @@ namespace ScriptConverter
         {
             try
             {
-                Dictionary<Function, ScriptCompileResult> openAiScriptConverter = await OpenAiScriptConverter.GetAllFunctionsAsync(codeProvider);
+                Dictionary<Function, ICompiledScriptContainer> functionsScriptMap = new Dictionary<Function, ICompiledScriptContainer>();
+
+                foreach(ICodeProvider codeProvider in codeProviders) // go through all the code providers and compile their codes
+                {
+                    Dictionary<Function, ScriptCompileResult> openAiScriptConverter = await OpenAiScriptConverter.GetAllFunctionsAsync(codeProvider);
+
+                    foreach (KeyValuePair<Function, ScriptCompileResult> function in openAiScriptConverter)
+                        functionsScriptMap.Add(function.Key, function.Value); // add all the compile results
+                }
 
                 functions.Clear();
                 scriptCompileResults.Clear();
 
-                foreach (KeyValuePair<Function, ScriptCompileResult> function in openAiScriptConverter)
+                foreach (KeyValuePair<Function, ICompiledScriptContainer> mapPair in functionsScriptMap)
                 {
-                    functions.Add(function.Key);
-                    scriptCompileResults.Add(function.Key.Name, function.Value);
+                    functions.Add(mapPair.Key);
+                    scriptCompileResults.Add(mapPair.Key.Name, mapPair.Value);
                 }
 
                 return null;
@@ -58,14 +69,14 @@ namespace ScriptConverter
         /// <param name="functionName">The function name to try to find the compile result for</param>
         /// <param name="scriptCompileResult">The resulting SCriptCompileResult as an out parameter, if there was any</param>
         /// <returns>Wether or not it found a ScriptCompileResult</returns>
-        public bool TryGetCompileResult(string functionName, out ScriptCompileResult scriptCompileResult)
+        public bool TryGetCompiledScriptContainer(string functionName, out ICompiledScriptContainer scriptCompileResult)
         {
-            bool result = scriptCompileResults.TryGetValue(functionName, out ScriptCompileResult? compileResult);
+            bool result = scriptCompileResults.TryGetValue(functionName, out ICompiledScriptContainer? compiledScriptContainer);
 
-            if (compileResult == null)
+            if (compiledScriptContainer == null)
                 throw new Exception($"Tried to get compile result from function name ({functionName}) but the compile result was null, this should not happen");
 
-            scriptCompileResult = compileResult;
+            scriptCompileResult = compiledScriptContainer;
             return result;
         }
 

@@ -115,7 +115,7 @@ namespace OpenAiTests.Tests
             conversation.AddSystemMessage("You have a number of functions at your disposal. If the user asks you for something that requires the use of a function you will make sure to get all the required parameters from the user and then call that function.");
             conversation.AddUserMessage("I would like write a text to the database");
 
-            CompletionResult completionResult = await openAi.CompleteAsync(conversation);
+            CompletionResult completionResult = await openAi.CompleteAsync(conversation, false); // try with the auto add set to false
             conversation.Add(completionResult);
 
             Assert.IsNotNull(completionResult);
@@ -128,7 +128,6 @@ namespace OpenAiTests.Tests
 
             conversation.AddUserMessage("Yes, of course. I would like to write the text \"Hello World\" to the database");
             completionResult = await openAi.CompleteAsync(conversation);
-            conversation.Add(completionResult);
 
             Assert.IsNotNull(completionResult);
             Assert.IsNotNull(completionResult.Choices);
