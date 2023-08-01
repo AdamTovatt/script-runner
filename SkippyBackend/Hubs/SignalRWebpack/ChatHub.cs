@@ -51,14 +51,15 @@ namespace SkippyBackend.Hubs.SignalRWebpack
             {
                 if (functionLookup == null) functionLookup =
                         new FunctionScriptLookup(
-                            DefaultScriptDirectory,
+                            //DefaultScriptDirectory,
                             new PreCompiledScriptProvider(
                                 typeof(StartWorkflowScript),
                                 typeof(GetAvailableFunctionsScript),
                                 typeof(CreateWorkflowScript),
                                 typeof(CreateSingleItemScript),
                                 typeof(ChangeAssistantColorScript),
-                                typeof(ChangeUserColorScript)
+                                typeof(ChangeUserColorScript),
+                                typeof(UploadSvgToCloudinaryScript)
                                 )
                             );
                 return functionLookup;
