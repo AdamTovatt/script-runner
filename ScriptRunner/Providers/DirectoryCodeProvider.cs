@@ -1,4 +1,5 @@
-﻿using ScriptRunner.Models;
+﻿using ScriptRunner.Helpers;
+using ScriptRunner.Models;
 
 namespace ScriptRunner.Providers
 {
@@ -81,7 +82,7 @@ namespace ScriptRunner.Providers
 
         public static DirectoryCodeProvider CreateFromRelativePath(string relativePath)
         {
-            return new DirectoryCodeProvider(Path.Combine(Directory.GetCurrentDirectory(), relativePath));
+            return new DirectoryCodeProvider(PathHelper.GetPathFromRelativePath(relativePath));
         }
     }
 }

@@ -1,16 +1,13 @@
-﻿using ScriptRunner.ScriptConvertion;
-using ScriptRunner.Workflows;
+﻿using ScriptRunner;
 
 namespace SkippyBackend.Models
 {
-    public class SkippyContext : WorkflowContext
+    public class SkippyContext : ScriptContext
     {
-        public FunctionScriptLookup ScriptLookup { get; set; }
         public ClientData ClientData { get; set; }
 
-        public SkippyContext(FunctionScriptLookup scriptLookup, ClientData clientData) : base(clientData.Conversation)
+        public SkippyContext(ClientData clientData) : base(clientData.Conversation)
         {
-            ScriptLookup = scriptLookup;
             ClientData = clientData;
         }
     }

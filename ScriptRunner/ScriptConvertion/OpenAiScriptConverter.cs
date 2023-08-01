@@ -64,7 +64,7 @@ namespace ScriptRunner.ScriptConvertion
             MethodInfo? startMethod = scriptType.GetMethods().SingleOrDefault(method => method.GetCustomAttribute<ScriptStart>() != null);
 
             if (startMethod == null)
-                throw new InvalidOperationException("The script doesn't contain a method with the ScriptStart attribute");
+                throw new InvalidOperationException($"The script doesn't contain a method with the ScriptStart attribute {compiledScript.GetScriptType().Name}");
 
             ParameterInfo[] parameters = startMethod.GetParameters();
 

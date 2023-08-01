@@ -31,5 +31,11 @@ namespace ScriptRunner.OpenAi.Models.Completion
         {
             Parameters.Add(new Parameter(name, type, description), required);
         }
+
+
+        public override string ToString()
+        {
+            return Name;
+        }
     }
 }

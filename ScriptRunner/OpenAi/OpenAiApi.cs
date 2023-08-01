@@ -34,19 +34,14 @@ namespace ScriptRunner.OpenAi
         /// <returns></returns>
         public async Task<CompletionResult> CompleteAsync(Conversation conversation, bool addResultToConversation = true, int allowedFailCount = 2)
         {
-            Conversation targetConversation = conversation;
-
-            while(targetConversation.ChildConversation != null) // always take the inner most conversation
-                targetConversation = targetConversation.ChildConversation;
-
             int failCount = 0;
 
             try
             {
-                CompletionResult result = await CompleteAsync(targetConversation.CreateCompletionParameter());
+                CompletionResult result = await CompleteAsync(conversation.CreateCompletionParameter());
                 
                 if (addResultToConversation)
-                    targetConversation.Add(result);
+                    conversation.Add(result);
 
                 return result;
             }
@@ -58,7 +53,7 @@ namespace ScriptRunner.OpenAi
                 if ((exceptionType != typeof(HttpRequestException) && exceptionType != typeof(JsonException)) || failCount > allowedFailCount)
                     throw;
 
-                return await CompleteAsync(targetConversation);
+                return await CompleteAsync(conversation);
             }
         }
 

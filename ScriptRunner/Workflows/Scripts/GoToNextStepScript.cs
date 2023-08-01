@@ -1,5 +1,4 @@
-﻿using ScriptRunner;
-using ScriptRunner.DocumentationAttributes;
+﻿using ScriptRunner.DocumentationAttributes;
 
 namespace ScriptRunner.Workflows.Scripts
 {
@@ -12,12 +11,10 @@ namespace ScriptRunner.Workflows.Scripts
         [Returns("The next step in the workflow.")]
         public string GoToNextStep()
         {
-            WorkflowContext workflowContext = (WorkflowContext)Context;
-
-            if(workflowContext.Workflow == null)
+            if(Context.Conversation.Workflow == null)
                 return "You are not currently in a workflow. You can start a workflow by calling the StartWorkflow() function.";
 
-            return workflowContext.Workflow.GoToNextStep();
+            return Context.Conversation.Workflow.GoToNextStep();
         }
     }
 }

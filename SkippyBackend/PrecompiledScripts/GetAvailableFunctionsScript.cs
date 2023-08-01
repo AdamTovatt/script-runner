@@ -1,10 +1,6 @@
-﻿using OpenAi.Models.Completion;
-using ScriptRunner;
-using ScriptRunner.Models;
+﻿using ScriptRunner;
+using ScriptRunner.DocumentationAttributes;
 using ScriptRunner.OpenAi.Models.Completion;
-using ScriptRunner.Providers;
-using SkippyBackend.Models;
-using System;
 
 namespace SkippyBackend.PrecompiledScripts
 {
@@ -12,17 +8,16 @@ namespace SkippyBackend.PrecompiledScripts
     {
         public GetAvailableFunctionsScript(ScriptContext context) : base(context) { }
 
-        /// <summary>
-        /// Will return a list of the names for all available functions that have been loaded and are callable
-        /// </summary>
+        [Summary("Will return a list of the names for all available functions that have been loaded and are callable")]
         [ScriptStart]
         public string GetAvailableFunctions()
         {
             try
             {
-                SkippyContext context = (SkippyContext)Context;
+                if (Context.Conversation.FunctionLookup == null)
+                    throw new Exception("There are no functions");
 
-                List<Function> functions = context.ScriptLookup.GetFunctions();
+                List<Function> functions = Context.Conversation.FunctionLookup.GetFunctions().OrderBy(x => x.Name).ToList();
 
                 List<string> result = new List<string>();
 

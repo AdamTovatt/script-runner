@@ -1,6 +1,4 @@
-﻿using OpenAi.Models.Completion;
-using ScriptRunner;
-using ScriptRunner.DocumentationAttributes;
+﻿using ScriptRunner.DocumentationAttributes;
 
 namespace ScriptRunner.Workflows.Scripts
 {
@@ -11,13 +9,9 @@ namespace ScriptRunner.Workflows.Scripts
         [ScriptStart]
         [Summary("Will start a workflow with the given name.")]
         [Parameter("workflowName", "The name of the workflow to start.")]
-        public string StartWorkflow(string workflowName)
+        public async Task<string> StartWorkflow(string workflowName)
         {
-            if (!typeof(WorkflowContext).IsAssignableFrom(Context.GetType()))
-                return $"A workflow can not be started because the current context ({Context.GetType()}) does not implement IWorkflowContext.";
-
-            WorkflowContext workflowContext = (WorkflowContext)Context;
-            return workflowContext.EnterWorkflow(workflowName);
+            return await Context.Conversation.EnterWorkflowAsync(workflowName);
         }
     }
 }

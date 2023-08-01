@@ -1,11 +1,18 @@
 ﻿using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace ScriptRunner.Workflows
 {
     public class Workflow
     {
+        [JsonPropertyName("tasks")]
         public List<string> Tasks { get; set; }
+
+        [JsonPropertyName("name")]
         public string Name { get; set; }
+
+        [JsonPropertyName("purpose")]
         public string Purpose { get; set; }
 
         private int currentStep = 1;
@@ -29,10 +36,10 @@ namespace ScriptRunner.Workflows
 
             StringBuilder message = new StringBuilder();
 
-            message.AppendLine($"You are currently in a workflow that will {Purpose}");
             message.AppendLine("A workflow is a collection of tasks that you will complete, if the task requires you to take input from the use you will do so. ");
-            message.AppendLine("When you have aquired all neccessary inputs from the user and completed everything there is to do in the current task you will continue by calling the GoToNextStep function.");
-            message.AppendLine($"If the users wants to exit the workflow prematurely they can. Maybe they change their mind and don't want to continue. You can help them by calling first warning them that if they exit the progress towards {Purpose} will be lost, if they still want to exit you can call the ExitWorkflow() function with a short message about what happened.");
+            message.AppendLine($"You are currently in a workflow that will {Purpose}. ");
+            message.AppendLine("When you have aquired all neccessary inputs from the user and completed everything there is to do in the current task you will continue by calling the GoToNextStep function. ");
+            message.AppendLine($"If the users wants to exit the workflow prematurely they can. Maybe they change their mind and don't want to continue. You can help them by calling first warning them that if they exit the progress towards {Purpose} will be lost, if they still want to exit you can call the ExitWorkflow() function with a short message about what happened. ");
 
             if (savedValues.Count > 0)
             {
@@ -55,6 +62,16 @@ namespace ScriptRunner.Workflows
                 savedValues[key] = value;
             else
                 savedValues.Add(key, value);
+        }
+
+        public static Workflow? FromJson(string json)
+        {
+            return JsonSerializer.Deserialize<Workflow>(json);
+        }
+
+        public string ToJson()
+        {
+            return JsonSerializer.Serialize(this);
         }
     }
 }

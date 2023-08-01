@@ -12,6 +12,7 @@ using ScriptRunner.ScriptConvertion;
 using ScriptRunner.OpenAi;
 using ScriptRunner.Workflows.Scripts;
 using ScriptRunner.OpenAi.Models.Completion;
+using System;
 
 namespace SkippyBackend.Hubs.SignalRWebpack
 {
@@ -50,12 +51,13 @@ namespace SkippyBackend.Hubs.SignalRWebpack
         {
             get
             {
-                if (functionLookup == null) functionLookup = 
+                if (functionLookup == null) functionLookup =
                         new FunctionScriptLookup(
-                            DefaultScriptDirectory, 
+                            DefaultScriptDirectory,
                             new PreCompiledScriptProvider(
-                                typeof(StartWorkflowScript), 
-                                typeof(GetAvailableFunctionsScript)
+                                typeof(StartWorkflowScript),
+                                typeof(GetAvailableFunctionsScript),
+                                typeof(CreateWorkflowScript)
                                 )
                             );
                 return functionLookup;
@@ -83,27 +85,25 @@ namespace SkippyBackend.Hubs.SignalRWebpack
             await base.OnConnectedAsync();
 
             ChatConfiguration chatConfiguration = new ChatConfiguration();
-            Conversation conversation = new Conversation(Model.Gpt35Turbo16k, 15000);
+            Conversation conversation = new Conversation(OpenAi, Model.Gpt35Turbo16k, 15000);
 
             // aquire the functions (compile them if needed)
             try
             {
-                Task.Run(async () =>
+                if (await FunctionLookup.LoadFunctionsAsync() is List<string> errors && errors != null)
                 {
-                    if (await FunctionLookup.LoadFunctionsAsync() is List<string> errors && errors != null)
-                    {
-                        errors.ForEach(error => DisplayMessage(error, chatConfiguration.Colors["Error"], 0));
-                        return;
-                    }
-                }).Wait();
+                    errors.ForEach(error => DisplayMessage(error, chatConfiguration.Colors["Error"], 0));
+                    return;
+                }
             }
-            catch(Exception exception)
+            catch (Exception exception)
             {
                 DisplayMessage(exception.Message, chatConfiguration.Colors["Error"], 0);
             }
 
-            conversation.SetFunctions(FunctionLookup.GetFunctions());
+            conversation.SetFunctionLookup(FunctionLookup);
             conversation.AddSystemMessage(startPrompt);
+            conversation.Add(new DirectoryWorkflowProvider("workflows"));
 
             ClientData clientData = new ClientData(chatConfiguration, conversation);
             clientDataObjects.Add(Context.ConnectionId, clientData);
@@ -126,55 +126,45 @@ namespace SkippyBackend.Hubs.SignalRWebpack
         {
             DisplayMessage(message, CurrentClientData.ChatConfiguration.Colors["Accent2"], 1);
 
-            CurrentClientData.Conversation.AddUserMessage(message);
+            CurrentClientData.Conversation.ActiveConversation.AddUserMessage(message);
 
             await CompleteAsync();
         }
 
         public async Task CompleteAsync()
         {
+            Conversation conversation = CurrentClientData.Conversation;
+
             try
             {
-                CompletionResult result = await OpenAi.CompleteAsync(CurrentClientData.Conversation);
+                conversation.OnCompletionMessageRecieved += ConversationMessageRecieved;
+                conversation.OnFunctionCallWasMade += ConversationFunctionCallWasMade;
+                conversation.OnErrorOccured += ConversationErrorOccured;
 
-                foreach (Choice choice in result.Choices)
-                {
-                    if (choice.FinishReason == FinishReason.FunctionCall)
-                    {
-                        FunctionCall? functionCall = choice.Message.FunctionCall;
-
-                        if (functionCall == null)
-                            throw new Exception("Badly formatted answer from OpenAi. It said there would be a function call but the function was missing");
-
-                        if (FunctionLookup.TryGetCompiledScriptContainer(functionCall.Name, out ICompiledScriptContainer scriptContainer))
-                        {
-                            DisplayMessage($"(function call: {functionCall.Name})", CurrentClientData.ChatConfiguration.Colors["Success"], 0);
-
-                            CompiledScript compiledScript = scriptContainer.GetCompiledScript(new SkippyContext(FunctionLookup, CurrentClientData));
-
-                            try
-                            {
-                                object? returnValue = compiledScript.Run(functionCall.Arguments);
-                                CurrentClientData.Conversation.AddSystemMessage($"Function call returned: {ReturnValueConverter.GetStringFromObject(returnValue)}");
-                            }
-                            catch (Exception exception)
-                            {
-                                CurrentClientData.Conversation.AddSystemMessage($"The function threw an exception and the user needs to be informed: {exception.Message} {exception.InnerException?.Message}");
-                            }
-
-                            await CompleteAsync();
-                        }
-                    }
-                    else
-                    {
-                        DisplayMessage(choice.Message.Content, CurrentClientData.ChatConfiguration.Colors["Accent1"], -1);
-                    }
-                }
+                await conversation.CompleteAsync(new SkippyContext(CurrentClientData));
             }
-            catch(Exception exception)
+            catch { throw; }
+            finally
             {
-                DisplayMessage($"{exception.Message} {exception.InnerException?.Message}", CurrentClientData.ChatConfiguration.Colors["Error"], 0);
+                conversation.OnCompletionMessageRecieved -= ConversationMessageRecieved;
+                conversation.OnFunctionCallWasMade -= ConversationFunctionCallWasMade;
+                conversation.OnErrorOccured -= ConversationErrorOccured;
             }
+        }
+
+        private void ConversationMessageRecieved(object sender, string message)
+        {
+            DisplayMessage(message, CurrentClientData.ChatConfiguration.Colors["Accent1"], -1);
+        }
+
+        private void ConversationFunctionCallWasMade(object sender, FunctionCall functionCall)
+        {
+            DisplayMessage($"(function call: {functionCall.Name})", CurrentClientData.ChatConfiguration.Colors["Success"], 0);
+        }
+
+        private void ConversationErrorOccured(object sender, string message)
+        {
+            DisplayMessage(message, CurrentClientData.ChatConfiguration.Colors["Error"], 0);
         }
     }
 }

@@ -42,6 +42,11 @@ namespace ScriptRunner
             ParameterInfo[] parameterInfos = startMethod.GetParameters();
             object?[] methodParameters = new object[parameterInfos.Length];
 
+            MethodInfo? getValueMethod = typeof(JsonNode).GetMethod("GetValue");
+
+            if (getValueMethod == null)
+                throw new MissingMethodException("The type JsonNode did not contain a method called GetValue when it was expected to");
+
             for (int i = 0; i < parameterInfos.Length; i++)
             {
                 object? parameterResult = null;
@@ -53,13 +58,38 @@ namespace ScriptRunner
                     {
                         if (foundParameter != null)
                         {
-                            MethodInfo? getValueMethod = typeof(JsonNode).GetMethod("GetValue");
+                            if (!typeof(IEnumerable<object>).IsAssignableFrom(wantedParameter.ParameterType)) // just a normal type
+                            {
+                                MethodInfo getValueMethodWithRightType = getValueMethod.MakeGenericMethod(wantedParameter.ParameterType);
+                                parameterResult = getValueMethodWithRightType.Invoke(foundParameter, null);
+                            }
+                            else // some sort of collection
+                            {
+                                Type? genericType = wantedParameter.ParameterType.IsArray ? wantedParameter.ParameterType.GetElementType() : wantedParameter.ParameterType.GenericTypeArguments[0];
+                                if(genericType == null) throw new Exception("Missing generic type for collection");
 
-                            if (getValueMethod == null)
-                                throw new MissingMethodException("The type JsonNode did not contain a method called GetValue when it was expected to");
+                                Type listType = typeof(List<>).MakeGenericType(genericType);
+                                object? list = Activator.CreateInstance(listType);
+                                MethodInfo? addMethod = list?.GetType().GetMethod("Add");
+                                if (addMethod == null) throw new Exception("Missing add method for list");
 
-                            MethodInfo getValueMethodWithRightType = getValueMethod.MakeGenericMethod(wantedParameter.ParameterType);
-                            parameterResult = getValueMethodWithRightType.Invoke(foundParameter, null);
+                                foreach (JsonNode? node in foundParameter.AsArray())
+                                {
+                                    MethodInfo getValueMethodWithRightType = getValueMethod.MakeGenericMethod(genericType);
+                                    addMethod.Invoke(list, new object?[] { getValueMethodWithRightType.Invoke(node, null) });
+                                }
+
+                                if (wantedParameter.ParameterType.IsArray)
+                                {
+                                    MethodInfo? toArrayMethod = list?.GetType().GetMethod("ToArray");
+                                    if(toArrayMethod == null) throw new Exception("Missing ToArray method for list");
+                                    parameterResult = toArrayMethod.Invoke(list, null);
+                                }
+                                else
+                                {
+                                    parameterResult = list;
+                                }
+                            }
                         }
                     }
                 }

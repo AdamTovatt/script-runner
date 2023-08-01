@@ -50,7 +50,7 @@ namespace ScriptRunnerTests
             Assert.AreEqual(compileResult.XmlComments["Run(int factor1, int factor2, string userName)"].Summary, "This is a test script that multiplies two numbers and returns the result.");
             Assert.AreEqual(3, compileResult.XmlComments["Run(int factor1, int factor2, string userName)"].Parameters?.Count());
 
-            CompiledScript compiledScript = compileResult.GetCompiledScript(new ScriptContext());
+            CompiledScript compiledScript = compileResult.GetCompiledScript(null!);
 
             Dictionary<string, JsonNode> parameters = new Dictionary<string, JsonNode>();
             parameters.Add("factor1", 210);

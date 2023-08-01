@@ -107,5 +107,15 @@ namespace ScriptRunner.ScriptConvertion
         {
             return functions;
         }
+
+        public void CombineWith(FunctionScriptLookup? other)
+        {
+            if (other == null) return;
+
+            foreach(KeyValuePair<string, ICompiledScriptContainer> compiledScriptContainer in other.scriptCompileResults)
+            {
+                scriptCompileResults.Add(compiledScriptContainer.Key, compiledScriptContainer.Value);
+            }
+        }
     }
 }

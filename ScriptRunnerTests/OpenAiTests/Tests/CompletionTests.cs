@@ -6,6 +6,11 @@ using ScriptRunner.OpenAi.Models.Completion;
 using ScriptRunner.OpenAi.Models.Completion.Parameters;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using ScriptRunner;
+using ScriptRunner.DocumentationAttributes;
+using Parameter = OpenAi.Models.Completion.Parameters.Parameter;
+using ScriptRunner.Providers;
+using ScriptRunner.ScriptConvertion;
 
 namespace OpenAiTests.Tests
 {
@@ -43,7 +48,7 @@ namespace OpenAiTests.Tests
         {
             OpenAiApi openAi = new OpenAiApi(TestEnvironmentHelper.GetOpenAiApiKey());
 
-            Conversation conversation = new Conversation(Model.Default, 1000);
+            Conversation conversation = new Conversation(openAi, Model.Default, 1000);
             conversation.AddSystemMessage("The user will provide you with a word and you will write three words that have the same meaning");
             conversation.AddUserMessage("happy");
 
@@ -73,13 +78,13 @@ namespace OpenAiTests.Tests
         {
             OpenAiApi openAi = new OpenAiApi(TestEnvironmentHelper.GetOpenAiApiKey());
 
-            Conversation conversation = new Conversation(Model.Default);
+            Conversation conversation = new Conversation(openAi, Model.Default);
 
-            Function function = new Function("GetTheCurrentTime", "Will get the current time");
-            function.Parameters.Add(new Parameter("timeZoneOffset", typeof(int), "The timezone of the user"), true);
+            FunctionScriptLookup functionScriptLookup = new FunctionScriptLookup(new PreCompiledScriptProvider(typeof(GetTheTimeScript)));
+            conversation.SetFunctionLookup(functionScriptLookup);
+            await functionScriptLookup.LoadFunctionsAsync();
 
             conversation.AddUserMessage("What is the current time?");
-            conversation.Add(function);
 
             CompletionResult completionResult = await openAi.CompleteAsync(conversation);
 
@@ -103,15 +108,11 @@ namespace OpenAiTests.Tests
         {
             OpenAiApi openAi = new OpenAiApi(TestEnvironmentHelper.GetOpenAiApiKey());
 
-            Conversation conversation = new Conversation(Model.Default, 2000);
+            Conversation conversation = new Conversation(openAi, Model.Default, 2000);
 
-            Function timeFunction = new Function("GetTimeInTimeZone", "Will get the time in the specified timezone");
-            timeFunction.Parameters.Add(new Parameter("timeZoneOffset", typeof(int), "The timezone of the user"), true);
-            conversation.Add(timeFunction);
-
-            Function writeFunction = new Function("WriteStringToDatabase", "Will take a string input and write it to the database");
-            writeFunction.Parameters.Add(new Parameter("valueToWrite", typeof(string), "The text to write to the database, has to be aquired from the user"), true);
-            conversation.Add(writeFunction);
+            FunctionScriptLookup functionScriptLookup = new FunctionScriptLookup(new PreCompiledScriptProvider(typeof(GetTheTimeScript), typeof(WriteToTheDatabaseScript)));
+            conversation.SetFunctionLookup(functionScriptLookup);
+            await functionScriptLookup.LoadFunctionsAsync();
 
             conversation.AddSystemMessage("You have a number of functions at your disposal. If the user asks you for something that requires the use of a function you will make sure to get all the required parameters from the user and then call that function.");
             conversation.AddUserMessage("I would like write a text to the database");
@@ -184,7 +185,7 @@ namespace OpenAiTests.Tests
             completionParameter.FunctionCall = "auto";
 
             Function function = new Function("GetTheCurrentTime", "Will get the current time");
-            function.Parameters.Add(new Parameter("timeZoneOffset", typeof(int), "The offset"));
+            function.Parameters.Add(new OpenAi.Models.Completion.Parameters.Parameter("timeZoneOffset", typeof(int), "The offset"));
 
             completionParameter.AddFunction(function);
 
@@ -203,6 +204,43 @@ namespace OpenAiTests.Tests
             string json = JsonSerializer.Serialize(message);
 
             Assert.AreEqual("{\"role\":\"assistant\",\"content\":\"testContent\",\"name\":null,\"function_call\":{\"name\":\"GetTheCurrentTime\",\"arguments\":\"{\\\"timeZoneOffset\\\":0}\"}}", json);
+        }
+
+        [TestMethod]
+        public void SerializeWithListArguments()
+        {
+            ParameterCollection parameterCollection = new ParameterCollection();
+            parameterCollection.Add(new Parameter("name", typeof(string), "The name"));
+            parameterCollection.Add(new Parameter("songs", typeof(List<string>), "The songs"));
+
+            string json = parameterCollection.ToJson();
+            Assert.AreEqual("{\"type\": \"object\", \"properties\": {\"name\": {\"type\": \"string\", \"description\": \"The name\"}, \"songs\": {\"type\": \"array\", \"description\": \"The songs\", \"items\": {\"type\": \"string\"}}}}", json);
+        }
+    }
+
+    public class GetTheTimeScript : CompiledScript
+    {
+        public GetTheTimeScript(ScriptContext context) : base(context) { }
+
+        [ScriptStart]
+        [Summary("Will get the current time")]
+        [ScriptRunner.DocumentationAttributes.Parameter("timeZoneOffset", "The offset")]
+        public string GetTheCurrentTime(int timeZoneOffset)
+        {
+            return DateTime.Now.ToString(); // this doesn't even do what it says it will do hehe
+        }
+    }
+
+    public class WriteToTheDatabaseScript : CompiledScript
+    {
+        public WriteToTheDatabaseScript(ScriptContext context) : base(context) { }
+
+        [ScriptStart]
+        [Summary("Will take a string input and write it to the database")]
+        [ScriptRunner.DocumentationAttributes.Parameter("valueToWrite", "The text to write to the database, has to be aquired from the user")]
+        public string WriteToTheDatabase(string valueToWrite)
+        {
+            return DateTime.Now.ToString(); // this doesn't even do what it says it will do hehe
         }
     }
 }
