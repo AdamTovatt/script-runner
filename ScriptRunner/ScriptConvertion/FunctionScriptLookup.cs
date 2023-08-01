@@ -112,10 +112,8 @@ namespace ScriptRunner.ScriptConvertion
         {
             if (other == null) return;
 
-            foreach(KeyValuePair<string, ICompiledScriptContainer> compiledScriptContainer in other.scriptCompileResults)
-            {
-                scriptCompileResults.Add(compiledScriptContainer.Key, compiledScriptContainer.Value);
-            }
+            compiledScriptProviders.AddRange(other.compiledScriptProviders);
+            codeProviders.AddRange(other.codeProviders);
         }
     }
 }

@@ -11,15 +11,7 @@ namespace ScriptRunner.OpenAi.Models.Completion
 {
     public class Conversation
     {
-        public delegate void CompletionMessageRecievedHandler(object sender, string message);
-        public event CompletionMessageRecievedHandler? OnCompletionMessageRecieved;
-
-        public delegate void FunctionCallWasMadeHandler(object sender, FunctionCall functionCall);
-        public event FunctionCallWasMadeHandler? OnFunctionCallWasMade;
-
-        public delegate void ErrorOccuredHandler(object sender, string message);
-        public event ErrorOccuredHandler? OnErrorOccured;
-
+        public Communicator Communicator { get; set; }
         public OpenAiApi OpenAi { get; set; }
         public List<Message> Messages { get; set; }
         public List<Function>? Functions { get { if (FunctionLookup == null) return null; return FunctionLookup.GetFunctions(); } }
@@ -41,6 +33,7 @@ namespace ScriptRunner.OpenAi.Models.Completion
             Model = model;
             Messages = new List<Message>();
             tokenCounter = new TokenCounter(model);
+            Communicator = new Communicator();
         }
 
         public void Add(IWorkflowProvider workflowProvider)
@@ -111,6 +104,7 @@ namespace ScriptRunner.OpenAi.Models.Completion
         public void AddSystemMessage(string content)
         {
             Messages.Add(new Message(Role.System, content));
+            Communicator.InvokeOnSystemMessageAdded(this, content);
         }
 
         /// <summary>
@@ -142,25 +136,26 @@ namespace ScriptRunner.OpenAi.Models.Completion
             Conversation workflowConversation = new Conversation(OpenAi, Model, TokenLimit);
             ChildConversation = workflowConversation;
 
+            workflowConversation.Communicator = Communicator;
             workflowConversation.ParentConversation = this;
             workflowConversation.AddSystemMessage("Workflow mode was entered");
             workflowConversation.Workflow = Workflow;
 
             PreCompiledScriptProvider scriptProvider = new PreCompiledScriptProvider(typeof(GoToNextStepScript), typeof(ExitWorkflowScript));
             FunctionScriptLookup workflowScriptLookup = new FunctionScriptLookup(scriptProvider);
+            workflowScriptLookup.CombineWith(FunctionLookup);
 
             try
             {
                 await workflowScriptLookup.LoadFunctionsAsync();
             }
-            catch(Exception exception)
+            catch (Exception exception)
             {
-
+                return $"Workflow {workflowName} was not started. An error occured while loading the workflow: {exception.Message}";
             }
 
-            workflowScriptLookup.CombineWith(FunctionLookup);
             workflowConversation.SetFunctionLookup(workflowScriptLookup);
-            workflowConversation.AddSystemMessage(workflowConversation.Workflow.GoToNextStep());
+            workflowConversation.AddSystemMessage(workflowConversation.Workflow.GoToNextStep(workflowConversation));
 
             return $"Workflow started: {workflowName}";
         }
@@ -178,6 +173,7 @@ namespace ScriptRunner.OpenAi.Models.Completion
             try
             {
                 Conversation conversation = GetActiveConversation();
+
                 CompletionResult result = await OpenAi.CompleteAsync(conversation);
 
                 foreach (Choice choice in result.Choices)
@@ -193,14 +189,14 @@ namespace ScriptRunner.OpenAi.Models.Completion
 
                         if (conversation.FunctionLookup.TryGetCompiledScriptContainer(functionCall.Name, out ICompiledScriptContainer scriptContainer))
                         {
-                            OnFunctionCallWasMade?.Invoke(this, functionCall);
+                            Communicator.InvokeOnFunctionCallWasMade(this, functionCall);
 
                             CompiledScript compiledScript = scriptContainer.GetCompiledScript(context);
 
                             try
                             {
                                 object? returnValue = compiledScript.Run(functionCall.Arguments);
-                                conversation.AddSystemMessage($"Function call returned: {ReturnValueConverter.GetStringFromObject(returnValue)}");
+                                conversation.AddSystemMessage($"(function call returned: {ReturnValueConverter.GetStringFromObject(returnValue)})");
                             }
                             catch (Exception exception)
                             {
@@ -212,13 +208,13 @@ namespace ScriptRunner.OpenAi.Models.Completion
                     }
                     else
                     {
-                        OnCompletionMessageRecieved?.Invoke(this, choice.Message.Content);
+                        Communicator.InvokeOnCompletionMessageRecieved(this, choice.Message.Content);
                     }
                 }
             }
             catch (Exception exception)
             {
-                OnErrorOccured?.Invoke(this, $"{exception.Message} {exception.InnerException?.Message}");
+                Communicator.InvokeOnErrorOccured(this, $"{exception.Message} {exception.InnerException?.Message}");
             }
         }
 

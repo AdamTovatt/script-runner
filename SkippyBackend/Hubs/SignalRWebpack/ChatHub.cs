@@ -57,7 +57,8 @@ namespace SkippyBackend.Hubs.SignalRWebpack
                             new PreCompiledScriptProvider(
                                 typeof(StartWorkflowScript),
                                 typeof(GetAvailableFunctionsScript),
-                                typeof(CreateWorkflowScript)
+                                typeof(CreateWorkflowScript),
+                                typeof(CreateSingleItemScript)
                                 )
                             );
                 return functionLookup;
@@ -137,19 +138,26 @@ namespace SkippyBackend.Hubs.SignalRWebpack
 
             try
             {
-                conversation.OnCompletionMessageRecieved += ConversationMessageRecieved;
-                conversation.OnFunctionCallWasMade += ConversationFunctionCallWasMade;
-                conversation.OnErrorOccured += ConversationErrorOccured;
+                conversation.Communicator.OnCompletionMessageRecieved += ConversationMessageRecieved;
+                conversation.Communicator.OnFunctionCallWasMade += ConversationFunctionCallWasMade;
+                conversation.Communicator.OnErrorOccured += ConversationErrorOccured;
+                conversation.Communicator.OnSystemMessageAdded += ConversationSystemMessageAdded;
 
                 await conversation.CompleteAsync(new SkippyContext(CurrentClientData));
             }
             catch { throw; }
             finally
             {
-                conversation.OnCompletionMessageRecieved -= ConversationMessageRecieved;
-                conversation.OnFunctionCallWasMade -= ConversationFunctionCallWasMade;
-                conversation.OnErrorOccured -= ConversationErrorOccured;
+                conversation.Communicator.OnCompletionMessageRecieved -= ConversationMessageRecieved;
+                conversation.Communicator.OnFunctionCallWasMade -= ConversationFunctionCallWasMade;
+                conversation.Communicator.OnErrorOccured -= ConversationErrorOccured;
+                conversation.Communicator.OnSystemMessageAdded -= ConversationSystemMessageAdded;
             }
+        }
+
+        private void ConversationSystemMessageAdded(object sender, string message)
+        {
+            DisplayMessage(message, CurrentClientData.ChatConfiguration.Colors["Success"], 0);
         }
 
         private void ConversationMessageRecieved(object sender, string message)

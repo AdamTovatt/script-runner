@@ -14,7 +14,7 @@ namespace ScriptRunner.Workflows.Scripts
             if(Context.Conversation.Workflow == null)
                 return "You are not currently in a workflow. You can start a workflow by calling the StartWorkflow() function.";
 
-            return Context.Conversation.Workflow.GoToNextStep();
+            return Context.Conversation.Workflow.GoToNextStep(Context.Conversation);
         }
     }
 }

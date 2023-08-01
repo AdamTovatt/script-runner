@@ -1,0 +1,11 @@
+{
+    "tasks": [
+        "first step won't be used",
+        "Ask me about what item I want to insure",
+        "Ask me what my item would cost to replace",
+        "Ask me how many claims I've had in the past 12 months",
+        "Call the FinalizeSingleItemCoverForUser with the values I've provided"
+    ],
+    "name": "CreateSingleItemCoverForUser",
+    "purpose": "create a single item cover for the user"
+}
