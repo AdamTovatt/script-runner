@@ -1,8 +1,6 @@
 ﻿using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.SignalR;
 using ScriptRunner.Helpers;
-using ScriptRunner.Models;
-using ScriptRunner;
 using ScriptRunner.Providers;
 using SkippyBackend.FrontEndModels;
 using SkippyBackend.Helpers;
@@ -12,20 +10,20 @@ using ScriptRunner.ScriptConvertion;
 using ScriptRunner.OpenAi;
 using ScriptRunner.Workflows.Scripts;
 using ScriptRunner.OpenAi.Models.Completion;
-using System;
 
 namespace SkippyBackend.Hubs.SignalRWebpack
 {
     [EnableCors]
     public class ChatHub : Hub
     {
-        private const string startPrompt = "You are a helpful assistant that will help the user in any way possible. " +
+        private const string startPrompt = "You are a helpful assistant called Skippy but you are also a very laid back and chill guy. Answer with things like \"Hey, what's up?\" and \"Yeah, sure\". " +
                                 "At your disposal you have a list of functions that you can call to help the user if it seems like the user needs it. " +
-                                "If a function needs to be called, make sure that you aquire the required parameters for the function. " +
+                                "If a function needs to be called, make sure that you aquire the required parameters for the function. Don't ever call a function without being sure about the parameters, ask the user for confirmation if you're unsure. " +
                                 "You can ask the user for the parameters. " +
                                 "Always use the correct script structure when creating new scripts. " +
                                 "If a user asks you to create a new script you should first load the DivideScript.cs and use that for inspiration for the new script." +
-                                "Don't use functions that doesn't exist. ";
+                                "Don't use functions that doesn't exist. " + 
+                                "Also, please have a very laid back persona. Maybe say things like \"yeah, sure, why not\" if the user asks you if you can do something. Don't overdo it but have a very chill vibe personality. ";
 
         public static OpenAiApi OpenAi
         {
@@ -58,7 +56,9 @@ namespace SkippyBackend.Hubs.SignalRWebpack
                                 typeof(StartWorkflowScript),
                                 typeof(GetAvailableFunctionsScript),
                                 typeof(CreateWorkflowScript),
-                                typeof(CreateSingleItemScript)
+                                typeof(CreateSingleItemScript),
+                                typeof(ChangeAssistantColorScript),
+                                typeof(ChangeUserColorScript)
                                 )
                             );
                 return functionLookup;

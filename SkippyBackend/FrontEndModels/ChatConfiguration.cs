@@ -15,7 +15,7 @@
             { "Depth8", "#686D71" },
             { "Depth9", "#494D50" },
             { "Accent1", "#007BFF" },
-            { "Accent2", "#6C757D" },
+            { "Accent2", "#999999" },
             { "Success", "#28A745" },
             { "Error", "#DC3545" },
             { "Warning", "#FFC107" },
