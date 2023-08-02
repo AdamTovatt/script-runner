@@ -56,9 +56,7 @@ namespace SkippyBackend.Hubs.SignalRWebpack
                         new FunctionScriptLookup(
                             //DefaultScriptDirectory,
                             new PreCompiledScriptProvider(
-                                typeof(StartWorkflowScript),
                                 typeof(GetAvailableFunctionsScript),
-                                typeof(CreateWorkflowScript),
                                 typeof(CreateSingleItemScript),
                                 typeof(ChangeAssistantColorScript),
                                 typeof(ChangeUserColorScript),
@@ -139,6 +137,8 @@ namespace SkippyBackend.Hubs.SignalRWebpack
         // RPC
         public async Task SubmitInput(string input)
         {
+            DisplayMessage(input, CurrentClientData.ChatConfiguration.Colors["Accent2"], 1);
+
             await Task.CompletedTask;
             byte[] bytes = Encoding.UTF8.GetBytes(input);
             CurrentClientData.Conversation.ActiveConversation.AddInputResponse(bytes);

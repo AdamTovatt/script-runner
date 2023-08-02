@@ -1,6 +1,7 @@
 ﻿using ScriptRunner;
 using ScriptRunner.DocumentationAttributes;
-using ScriptRunner.Workflows.Scripts;
+using ScriptRunner.OpenAi;
+using ScriptRunner.OpenAi.Models.InputTypes;
 
 namespace SkippyBackend.PrecompiledScripts
 {
@@ -10,16 +11,20 @@ namespace SkippyBackend.PrecompiledScripts
 
         [ScriptStart]
         [Summary("Will create a single item cover for the user, this is a type of insurance. If the user wants to insure something, call this function. ")]
-        [Parameter("item", "The item that the user wants to insure")]
-        [Parameter("itemValue", "The value of the item to insure")]
-        [Parameter("amountOfRecentClaims", "The amount of recent claims the user has")]
-        public async Task<string> CreateSingleItem(string item, int itemValue, int amountOfRecentClaims)
+        public async Task<string> CreateSingleItem()
         {
-            StartWorkflowScript startWorkflowScript = new StartWorkflowScript(Context);
-            return await startWorkflowScript.StartWorkflow("CreateSingleItemCoverForUser");
+            OpenAiApi ai = Context.Conversation.OpenAi; // for shorter code later :weary:
 
-            //await Task.CompletedTask;
-            //return "Ok";
+            string rawItem = await Context.Conversation.GetInputFromUser<string>("What item do you want to insure?");
+            string item = (await ai.ExtractAsync<StringInputType>(rawItem)).ExtractedValue!.Value;
+
+            string rawItemValue = await Context.Conversation.GetInputFromUser<string>($"What would your {item} cost to replace?");
+            decimal itemValue = (await ai.ExtractAsync<DecimalInputType>(rawItemValue)).ExtractedValue!.Value;
+
+            string rawRecentClaims = await Context.Conversation.GetInputFromUser<string>("Have you had any recent claims?");
+            bool recentClaims = (await ai.ExtractAsync<BoolInputType>(rawRecentClaims)).ExtractedValue!.Value;
+
+            return $"A single item cover was created for the item \"{item}\" with the value of {itemValue}£ and recent claims is: {recentClaims}. (not really)";
         }
     }
 }

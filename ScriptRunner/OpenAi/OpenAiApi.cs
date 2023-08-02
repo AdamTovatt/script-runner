@@ -3,6 +3,7 @@ using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text;
 using ScriptRunner.OpenAi.Models.Completion;
+using ScriptRunner.OpenAi.Models.InputTypes;
 
 namespace ScriptRunner.OpenAi
 {
@@ -39,13 +40,13 @@ namespace ScriptRunner.OpenAi
             try
             {
                 CompletionResult result = await CompleteAsync(conversation.CreateCompletionParameter());
-                
+
                 if (addResultToConversation)
                     conversation.Add(result);
 
                 return result;
             }
-            catch(Exception exception)
+            catch (Exception exception)
             {
                 failCount++;
                 Type exceptionType = exception.GetType();
@@ -90,6 +91,82 @@ namespace ScriptRunner.OpenAi
             {
                 throw new CompletionException("Error when creating an answer, the connection to OpenAi timed out.", null);
             }
+        }
+
+        public async Task<string> GetSingleAnswerAsync(string prompt, string answer)
+        {
+            CompletionParameter completionParameter = new CompletionParameter(Model.Default);
+            completionParameter.AddSystemMessage(prompt);
+            completionParameter.AddUserMessage(answer);
+
+            CompletionResult result = await CompleteAsync(completionParameter);
+
+            return result.Choices.First().Message.Content;
+        }
+
+        /// <summary>
+        /// Will extract a specific type of value from a string message. If the chosen type is string it will instead extract the item that that string is talking about
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="message"></param>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException"></exception>
+        public async Task<ExtractionResult<T>> ExtractAsync<T>(string message) where T : IInputType
+        {
+            Type type = typeof(T);
+
+            if (type == typeof(BoolInputType))
+                return (await ExtractBoolAsync(message) as ExtractionResult<T>)!;
+            else if (type == typeof(IntInputType))
+                return (await ExtractIntAsync(message) as ExtractionResult<T>)!;
+            else if (type == typeof(DecimalInputType))
+                return (await ExtractDecimalAsync(message) as ExtractionResult<T>)!;
+            else
+                if (type == typeof(StringInputType))
+                return (await ExtractStringAsync(message) as ExtractionResult<T>)!;
+
+            throw new InvalidOperationException($"Extracting the type {type} is not supported. ");
+        }
+
+        /// <summary>
+        /// Extract the subject of the string
+        /// </summary>
+        /// <param name="message"></param>
+        /// <returns></returns>
+        private async Task<ExtractionResult<StringInputType>> ExtractStringAsync(string message)
+        {
+            ExtractionResult<StringInputType> result = new ExtractionResult<StringInputType>(await GetSingleAnswerAsync("You will be given a message that is talking about a specific item. Answer with only with that item! Answer with (invalid) if not possible", message));
+
+            return result;
+        }
+
+        private async Task<ExtractionResult<DecimalInputType>> ExtractDecimalAsync(string message)
+        {
+            ExtractionResult<DecimalInputType> result = new ExtractionResult<DecimalInputType>(message);
+
+            if (!result.Valid)
+                result = new ExtractionResult<DecimalInputType>(await GetSingleAnswerAsync("You will be given a string with a number. Extract the number and answer it only that! It is important that your answer contains ONLY the number, nothing else. If it's not possible answer with (invalid)", message));
+
+            return result;
+        }
+
+        private async Task<ExtractionResult<BoolInputType>> ExtractBoolAsync(string message)
+        {
+            ExtractionResult<BoolInputType> result = new ExtractionResult<BoolInputType>(message);
+
+            if (!result.Valid)
+                result = new ExtractionResult<BoolInputType>(await GetSingleAnswerAsync("You will be given a string that you will convert to a boolean. You can think of anything that could mean no as false and anything that could mean yes as true. Answer with only true or false! Answer with (invalid) if not possible", message));
+
+            return result;
+        }
+        private async Task<ExtractionResult<IntInputType>> ExtractIntAsync(string message)
+        {
+            ExtractionResult<IntInputType> result = new ExtractionResult<IntInputType>(message);
+
+            if (!result.Valid)
+                result = new ExtractionResult<IntInputType>(await GetSingleAnswerAsync("You will be given a string with a number and some other things. Answer with only the number! Answer with (invalid) if not possible", message));
+
+            return result;
         }
     }
 }
