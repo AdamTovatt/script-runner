@@ -3,9 +3,9 @@ using System.Reflection;
 
 namespace ScriptRunner.Models
 {
-    public class AttributeCommentProvider : ICommentProvider
+    public class AttributeDocumentationProvider : IDocumentationProvider
     {
-        public AttributeCommentProvider(MethodInfo methodInfo)
+        public AttributeDocumentationProvider(MethodInfo methodInfo)
         {
             Parameters = new Dictionary<string, string>();
 
@@ -23,11 +23,17 @@ namespace ScriptRunner.Models
 
             if (returns != null)
                 Returns = returns.Text;
+
+            AllowedRoles? allowedRoles = methodInfo.GetCustomAttribute<AllowedRoles>();
+
+            if(allowedRoles != null)
+                AllowedRoles = allowedRoles.Roles;
         }
 
         public string? Summary { get; set; }
         public Dictionary<string, string>? Parameters { get; set; }
         public string? Returns { get; set; }
+        public string[]? AllowedRoles { get; set; }
 
         public string GetParameterDescription(string parameterName)
         {

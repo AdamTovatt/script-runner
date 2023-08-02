@@ -73,8 +73,13 @@ namespace ScriptRunner.Models
             throw new Exception($"The compiled assembly {CompiledAssembly.FullName} is missing a type that is a type of CompiledScript");
         }
 
-        public ICommentProvider? GetCommentProvider(MethodInfo method)
+        public IDocumentationProvider? GetDocumentationProvider(MethodInfo method)
         {
+            AttributeDocumentationProvider attributeCommentProvider = new AttributeDocumentationProvider(method);
+
+            if (attributeCommentProvider.Summary != null)
+                return attributeCommentProvider;
+
             string methodHeader = MethodInfoConverter.GetMethodHeader(method);
 
             if(XmlComments == null)

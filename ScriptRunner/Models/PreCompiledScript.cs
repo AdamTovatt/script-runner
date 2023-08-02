@@ -6,19 +6,19 @@ namespace ScriptRunner.Models
     {
         public Type ScriptType { get; set; }
 
-        private AttributeCommentProvider? attributeCommentProvider;
+        private AttributeDocumentationProvider? attributeDocumentationProvider;
 
         public PreCompiledScript(Type scriptType)
         {
             ScriptType = scriptType;
         }
 
-        public ICommentProvider? GetCommentProvider(MethodInfo method)
+        public IDocumentationProvider? GetDocumentationProvider(MethodInfo method)
         {
-            if (attributeCommentProvider == null)
-                attributeCommentProvider = new AttributeCommentProvider(method);
+            if (attributeDocumentationProvider == null)
+                attributeDocumentationProvider = new AttributeDocumentationProvider(method);
 
-            return attributeCommentProvider;
+            return attributeDocumentationProvider;
         }
 
         public CompiledScript GetCompiledScript(ScriptContext scriptContext)

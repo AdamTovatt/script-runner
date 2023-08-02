@@ -13,6 +13,9 @@ namespace ScriptRunner.OpenAi.Models.Completion
         [JsonConverter(typeof(ParameterCollectionConverter))]
         public ParameterCollection Parameters { get; set; }
 
+        [JsonIgnore]
+        public string[]? AllowedRoles { get; set; }
+
         public Function(string name, string description, ParameterCollection parameters)
         {
             Name = name;
@@ -31,7 +34,6 @@ namespace ScriptRunner.OpenAi.Models.Completion
         {
             Parameters.Add(new Parameter(name, type, description), required);
         }
-
 
         public override string ToString()
         {

@@ -2,11 +2,12 @@
 
 namespace ScriptRunner.Models
 {
-    public class XmlComment : ICommentProvider
+    public class XmlComment : IDocumentationProvider
     {
         public string? Summary { get; set; }
         public Dictionary<string, string>? Parameters { get; set; }
         public string? Returns { get; set; }
+        public string[]? AllowedRoles { get; set; } // will always be null unless some specific code is written to change that, attribute based documentation is better
 
         public XmlComment(string rawComment)
         {

@@ -68,15 +68,16 @@ namespace ScriptRunner.ScriptConvertion
 
             ParameterInfo[] parameters = startMethod.GetParameters();
 
-            ICommentProvider? comment = compiledScript.GetCommentProvider(startMethod);
-            Function function = new Function($"{startMethod.Name}", comment?.Summary ?? "");
+            IDocumentationProvider? documentation = compiledScript.GetDocumentationProvider(startMethod);
+            Function function = new Function(startMethod.Name, documentation?.Summary ?? "");
+            function.AllowedRoles = documentation != null && documentation.AllowedRoles != null ? documentation.AllowedRoles : null;
 
             foreach (ParameterInfo parameter in parameters)
             {
                 if (parameter.Name == null) continue;
 
                 string parameterName = parameter.Name;
-                string? parameterDescription = comment?.GetParameterDescription(parameter.Name);
+                string? parameterDescription = documentation?.GetParameterDescription(parameter.Name);
                 function.Parameters.Add(new Parameter(parameterName, parameter.ParameterType, parameterDescription ?? ""), true);
             }
 

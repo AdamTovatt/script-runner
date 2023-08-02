@@ -1,6 +1,7 @@
 ﻿using ScriptRunner.Models;
 using ScriptRunner.OpenAi.Models.Completion;
 using ScriptRunner.Providers;
+using System.Security.Claims;
 
 namespace ScriptRunner.ScriptConvertion
 {
@@ -13,6 +14,7 @@ namespace ScriptRunner.ScriptConvertion
         private List<Function> functions;
         private List<ICodeProvider> codeProviders;
         private List<ICompiledScriptProvider> compiledScriptProviders;
+        private ClaimsPrincipal? claimsPrincipal;
 
         /// <summary>
         /// Will create a new instance of the FunctionScriptLookup class based on the given code providers
@@ -54,7 +56,7 @@ namespace ScriptRunner.ScriptConvertion
                         functionsScriptMap.Add(function.Key, function.Value); // add all the compile results
                 }
 
-                foreach(ICompiledScriptProvider compiledScriptProvider in compiledScriptProviders)
+                foreach(ICompiledScriptProvider compiledScriptProvider in compiledScriptProviders) // go through the precompiled scripts and add them
                 {
                     foreach (ICompiledScriptContainer compiledScriptContainer in compiledScriptProvider.GetCompiledScripts())
                     {
@@ -70,8 +72,19 @@ namespace ScriptRunner.ScriptConvertion
 
                 foreach (KeyValuePair<Function, ICompiledScriptContainer> mapPair in functionsScriptMap)
                 {
-                    functions.Add(mapPair.Key);
-                    scriptCompileResults.Add(mapPair.Key.Name, mapPair.Value);
+                    Function function = mapPair.Key;
+
+                    if(function.AllowedRoles != null)
+                    {
+                        if (claimsPrincipal == null)
+                            throw new InvalidOperationException($"Claims principal as not been set, but the function ({function.Name}) requires a claims principal. Use .SetClaimsPrincipal() on the FunctionScriptLookup before loading functions that have specific allowed roles. ");
+                        
+                        if (!function.AllowedRoles.Any(role => claimsPrincipal.IsInRole(role)))
+                            continue; // skip this function, since the user is not in any of the allowed roles
+                    }
+
+                    functions.Add(function);
+                    scriptCompileResults.Add(function.Name, mapPair.Value);
                 }
 
                 return null;
@@ -114,6 +127,11 @@ namespace ScriptRunner.ScriptConvertion
 
             compiledScriptProviders.AddRange(other.compiledScriptProviders);
             codeProviders.AddRange(other.codeProviders);
+        }
+
+        public void SetClaimsPrincipal(ClaimsPrincipal? principal)
+        {
+            claimsPrincipal = principal;
         }
     }
 }

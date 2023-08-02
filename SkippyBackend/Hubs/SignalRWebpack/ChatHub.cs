@@ -89,6 +89,7 @@ namespace SkippyBackend.Hubs.SignalRWebpack
 
             ChatConfiguration chatConfiguration = new ChatConfiguration();
             Conversation conversation = new Conversation(OpenAi, Model.Gpt35Turbo16k, 15000);
+            FunctionLookup.SetClaimsPrincipal(Context.User);
 
             // aquire the functions (compile them if needed)
             try

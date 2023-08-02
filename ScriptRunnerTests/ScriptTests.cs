@@ -84,7 +84,7 @@ namespace ScriptRunnerTests
             Assert.AreEqual(typeof(TestScript2), scripts2[1].GetScriptType());
 
             ICompiledScriptContainer testScript = scripts2[0];
-            ICommentProvider? commentProvider = testScript.GetCommentProvider(testScript.GetScriptType().GetMethods().First(x => x.GetCustomAttribute<ScriptStart>() != null));
+            IDocumentationProvider? commentProvider = testScript.GetDocumentationProvider(testScript.GetScriptType().GetMethods().First(x => x.GetCustomAttribute<ScriptStart>() != null));
 
             Assert.IsNotNull(commentProvider);
             Assert.AreEqual("This is a test script", commentProvider.Summary);

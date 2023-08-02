@@ -6,6 +6,6 @@ namespace ScriptRunner.Models
     {
         public CompiledScript GetCompiledScript(ScriptContext scriptContext);
         public Type GetScriptType();
-        public ICommentProvider? GetCommentProvider(MethodInfo method);
+        public IDocumentationProvider? GetDocumentationProvider(MethodInfo method);
     }
 }
