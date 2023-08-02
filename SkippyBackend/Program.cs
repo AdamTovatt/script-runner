@@ -6,13 +6,13 @@ namespace SkippyBackend
     {
         public static void Main(string[] args)
         {
-            var builder = WebApplication.CreateBuilder(args);
+            WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-            builder.Services.AddSignalR();
+            builder.Services.AddSignalR(options => options.MaximumParallelInvocationsPerClient = 2);
 
             builder.Services.AddCors();
 
-            var app = builder.Build();
+            WebApplication app = builder.Build();
 
             app.UseCors(options =>
             {

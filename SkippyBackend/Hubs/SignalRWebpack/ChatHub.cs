@@ -75,8 +75,6 @@ namespace SkippyBackend.Hubs.SignalRWebpack
         private static Dictionary<string, ClientData> clientDataObjects = new Dictionary<string, ClientData>();
         private bool hasLoadedAdditionalReferences = false;
 
-        private Conversation? inputConversation = null;
-
         public ChatHub()
         {
             if (!hasLoadedAdditionalReferences)
@@ -141,14 +139,14 @@ namespace SkippyBackend.Hubs.SignalRWebpack
         // RPC
         public async Task SubmitInput(string input)
         {
-            byte[] input2 = Encoding.UTF8.GetBytes(input);
-            inputConversation.AddInputResponse(input2);
+            await Task.CompletedTask;
+            byte[] bytes = Encoding.UTF8.GetBytes(input);
+            CurrentClientData.Conversation.ActiveConversation.AddInputResponse(bytes);
         }
 
         private void ConversationWantsInput(object sender, Type inputType, string inputMessage)
         {
-            inputConversation = (Conversation)sender;
-            Clients.All.SendAsync("requestInput", new InputRequest(inputType, inputMessage));
+            Clients.All.SendAsync("requestInput", new InputRequest(inputType, new DisplayMessage(inputMessage, CurrentClientData.ChatConfiguration.Colors["Accent1"], -1)));
         }
 
         private void ConversationSystemMessageAdded(object sender, string message)

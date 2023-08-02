@@ -15,7 +15,7 @@ namespace SkippyBackend.PrecompiledScripts
         {
             try
             {
-                string input = await Context.Conversation.GetInputFromUser<string>("the content of an svg file");
+                string input = await Context.Conversation.GetInputFromUser<string>("Please provide the content of the svg file as a string in the chat");
 
                 return await CloudinaryHelper.Instance.UploadImageAsync(svgName, Encoding.UTF8.GetBytes(input));
             }

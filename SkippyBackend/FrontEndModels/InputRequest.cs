@@ -7,13 +7,13 @@ namespace SkippyBackend.FrontEndModels
         [JsonPropertyName("type")]
         public string Type { get; set; }
 
-        [JsonPropertyName("description")]
-        public string Description { get; set; }
+        [JsonPropertyName("displayMessage")]
+        public DisplayMessage DisplayMessage { get; set; }
 
-        public InputRequest(Type type, string description)
+        public InputRequest(Type type, DisplayMessage displayMessage)
         {
             Type = type.ToString();
-            Description = description;
+            DisplayMessage = displayMessage;
         }
     }
 }
