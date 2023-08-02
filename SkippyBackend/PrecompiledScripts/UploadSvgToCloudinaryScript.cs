@@ -11,10 +11,18 @@ namespace SkippyBackend.PrecompiledScripts
 
         [ScriptStart]
         [Parameter("svgName", "The name of the svg file. The name of the image." )]
-        [Parameter("svgContent", "The content of the svg file. ")]
-        public async Task<string> UploadSvgToCloudinary(string svgName, string svgContent)
+        public async Task<string> UploadSvgToCloudinary(string svgName)
         {
-            return await CloudinaryHelper.Instance.UploadImageAsync(svgName, UTF8Encoding.UTF8.GetBytes(svgContent));
+            try
+            {
+                string input = await Context.Conversation.GetInputFromUser<string>("the content of an svg file");
+
+                return await CloudinaryHelper.Instance.UploadImageAsync(svgName, Encoding.UTF8.GetBytes(input));
+            }
+            catch(Exception exception)
+            {
+                return $"Error when uploading svg: {exception.Message}";
+            }
         }
     }
 }

@@ -10,6 +10,9 @@ using ScriptRunner.ScriptConvertion;
 using ScriptRunner.OpenAi;
 using ScriptRunner.Workflows.Scripts;
 using ScriptRunner.OpenAi.Models.Completion;
+using System.ComponentModel;
+using System.Text.Unicode;
+using System.Text;
 
 namespace SkippyBackend.Hubs.SignalRWebpack
 {
@@ -22,7 +25,7 @@ namespace SkippyBackend.Hubs.SignalRWebpack
                                 "You can ask the user for the parameters. " +
                                 "Always use the correct script structure when creating new scripts. " +
                                 "If a user asks you to create a new script you should first load the DivideScript.cs and use that for inspiration for the new script." +
-                                "Don't use functions that doesn't exist. " + 
+                                "Don't use functions that doesn't exist. " +
                                 "Also, please have a very laid back persona. Maybe say things like \"yeah, sure, why not\" if the user asks you if you can do something. Don't overdo it but have a very chill vibe personality. ";
 
         public static OpenAiApi OpenAi
@@ -71,6 +74,8 @@ namespace SkippyBackend.Hubs.SignalRWebpack
 
         private static Dictionary<string, ClientData> clientDataObjects = new Dictionary<string, ClientData>();
         private bool hasLoadedAdditionalReferences = false;
+
+        private Conversation? inputConversation = null;
 
         public ChatHub()
         {
@@ -123,7 +128,7 @@ namespace SkippyBackend.Hubs.SignalRWebpack
             DisplayMessage(displayMessage);
         }
 
-        /// RPC
+        // RPC
         public async Task NewMessage(string message)
         {
             DisplayMessage(message, CurrentClientData.ChatConfiguration.Colors["Accent2"], 1);
@@ -133,27 +138,17 @@ namespace SkippyBackend.Hubs.SignalRWebpack
             await CompleteAsync();
         }
 
-        public async Task CompleteAsync()
+        // RPC
+        public async Task SubmitInput(string input)
         {
-            Conversation conversation = CurrentClientData.Conversation;
+            byte[] input2 = Encoding.UTF8.GetBytes(input);
+            inputConversation.AddInputResponse(input2);
+        }
 
-            try
-            {
-                conversation.Communicator.OnCompletionMessageRecieved += ConversationMessageRecieved;
-                conversation.Communicator.OnFunctionCallWasMade += ConversationFunctionCallWasMade;
-                conversation.Communicator.OnErrorOccured += ConversationErrorOccured;
-                conversation.Communicator.OnSystemMessageAdded += ConversationSystemMessageAdded;
-
-                await conversation.CompleteAsync(new SkippyContext(CurrentClientData));
-            }
-            catch { throw; }
-            finally
-            {
-                conversation.Communicator.OnCompletionMessageRecieved -= ConversationMessageRecieved;
-                conversation.Communicator.OnFunctionCallWasMade -= ConversationFunctionCallWasMade;
-                conversation.Communicator.OnErrorOccured -= ConversationErrorOccured;
-                conversation.Communicator.OnSystemMessageAdded -= ConversationSystemMessageAdded;
-            }
+        private void ConversationWantsInput(object sender, Type inputType, string inputMessage)
+        {
+            inputConversation = (Conversation)sender;
+            Clients.All.SendAsync("requestInput", new InputRequest(inputType, inputMessage));
         }
 
         private void ConversationSystemMessageAdded(object sender, string message)
@@ -174,6 +169,31 @@ namespace SkippyBackend.Hubs.SignalRWebpack
         private void ConversationErrorOccured(object sender, string message)
         {
             DisplayMessage(message, CurrentClientData.ChatConfiguration.Colors["Error"], 0);
+        }
+
+        public async Task CompleteAsync()
+        {
+            Conversation conversation = CurrentClientData.Conversation;
+
+            try
+            {
+                conversation.Communicator.OnCompletionMessageRecieved += ConversationMessageRecieved;
+                conversation.Communicator.OnFunctionCallWasMade += ConversationFunctionCallWasMade;
+                conversation.Communicator.OnErrorOccured += ConversationErrorOccured;
+                conversation.Communicator.OnSystemMessageAdded += ConversationSystemMessageAdded;
+                conversation.Communicator.OnWantsInput += ConversationWantsInput;
+
+                await conversation.CompleteAsync(new SkippyContext(CurrentClientData));
+            }
+            catch { throw; }
+            finally
+            {
+                conversation.Communicator.OnCompletionMessageRecieved -= ConversationMessageRecieved;
+                conversation.Communicator.OnFunctionCallWasMade -= ConversationFunctionCallWasMade;
+                conversation.Communicator.OnErrorOccured -= ConversationErrorOccured;
+                conversation.Communicator.OnSystemMessageAdded -= ConversationSystemMessageAdded;
+                conversation.Communicator.OnWantsInput -= ConversationWantsInput;
+            }
         }
     }
 }

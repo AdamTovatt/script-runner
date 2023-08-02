@@ -5,6 +5,7 @@ using ScriptRunner.Providers;
 using ScriptRunner.ScriptConvertion;
 using ScriptRunner.Workflows;
 using ScriptRunner.Workflows.Scripts;
+using System.Text;
 using System.Text.Json;
 
 namespace ScriptRunner.OpenAi.Models.Completion
@@ -24,6 +25,8 @@ namespace ScriptRunner.OpenAi.Models.Completion
         public IWorkflowProvider? WorkflowProvider { get; set; }
         public Conversation ActiveConversation { get { return GetActiveConversation(); } }
 
+        private object userInputStreamLock = new object();
+        private MemoryStream? userInputStream;
         private TokenCounter tokenCounter;
 
         public Conversation(OpenAiApi openAi, string model, int? tokenLimit = null)
@@ -215,6 +218,57 @@ namespace ScriptRunner.OpenAi.Models.Completion
             catch (Exception exception)
             {
                 Communicator.InvokeOnErrorOccured(this, $"{exception.Message} {exception.InnerException?.Message}");
+            }
+        }
+
+        public async Task<T> GetInputFromUser<T>(string inputMessage)
+        {
+            byte[]? result = null;
+
+            using (userInputStream = new MemoryStream())
+            {
+                if (!Communicator.InvokeOnWantsInput(this, typeof(T), inputMessage))
+                    throw new InvalidOperationException("An attempt to take user input from a conversation where the communicator hasn't been correctly subscribed to was made. Make sure to subscribe to and handle the OnWantsInput event. ");
+
+                while (true)
+                {
+                    lock (userInputStreamLock)
+                    {
+                        if (userInputStream.Length > 0)
+                            result = userInputStream.ToArray();
+                    }
+
+                    if (result != null) break;
+
+                    await Task.Delay(500);
+                }
+            }
+
+            userInputStream = null;
+
+            try
+            {
+                if (typeof(T) == typeof(string))
+                    return (T)(object)Encoding.UTF8.GetString(result);
+                if (typeof(T) == typeof(byte[]))
+                    return (T)(object)result;
+
+                return (T)Convert.ChangeType(result, typeof(T));
+            }
+            catch(Exception exception)
+            {
+                throw new InvalidDataException($"An error occured when converting the input from the user (length: {result.Length}) to the right type ({typeof(T)}). ", exception);
+            }
+        }
+
+        public void AddInputResponse(byte[] bytes)
+        {
+            if (userInputStream == null)
+                throw new InvalidOperationException("The user input stream is null, like no input is being taken, yet an attempt to write a user input was made. ");
+
+            lock (userInputStreamLock)
+            {
+                userInputStream.Write(bytes, 0, bytes.Length);
             }
         }
 
