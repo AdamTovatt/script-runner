@@ -11,6 +11,7 @@ namespace SkippyBackend.PrecompiledScripts
 
         [ScriptStart]
         [Parameter("svgName", "The name of the svg file. The name of the image." )]
+        [AllowedRoles("admin")]
         public async Task<string> UploadSvgToCloudinary(string svgName)
         {
             try
