@@ -13,6 +13,7 @@ using ScriptRunner.OpenAi.Models.Completion;
 using System.ComponentModel;
 using System.Text.Unicode;
 using System.Text;
+using ScriptRunner.OpenAi.Models.Input;
 
 namespace SkippyBackend.Hubs.SignalRWebpack
 {
@@ -141,13 +142,12 @@ namespace SkippyBackend.Hubs.SignalRWebpack
             DisplayMessage(input, CurrentClientData.ChatConfiguration.Colors["Accent2"], 1);
 
             await Task.CompletedTask;
-            byte[] bytes = Encoding.UTF8.GetBytes(input);
-            CurrentClientData.Conversation.ActiveConversation.AddInputResponse(bytes);
+            CurrentClientData.Conversation.ActiveConversation.Input.AddResponse(input);
         }
 
-        private void ConversationWantsInput(object sender, Type inputType, string inputMessage)
+        private void ConversationWantsInput(object sender, InputInfo inputInfo)
         {
-            Clients.All.SendAsync("requestInput", new InputRequest(inputType, new DisplayMessage(inputMessage, CurrentClientData.ChatConfiguration.Colors["Accent1"], -1)));
+            Clients.All.SendAsync("requestInput", new InputRequest(inputInfo, new DisplayMessage(inputInfo.Message, CurrentClientData.ChatConfiguration.Colors["Accent1"], -1)));
         }
 
         private void ConversationSystemMessageAdded(object sender, string message)

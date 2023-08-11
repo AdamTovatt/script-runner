@@ -1,7 +1,7 @@
 ﻿using OpenAiTests.Utilities;
 using ScriptRunner.OpenAi;
 using ScriptRunner.OpenAi.Models.Completion;
-using ScriptRunner.OpenAi.Models.InputTypes;
+using ScriptRunner.OpenAi.Models.Input.Types;
 
 namespace ScriptRunnerTests.OpenAiTests.Tests
 {
@@ -13,7 +13,7 @@ namespace ScriptRunnerTests.OpenAiTests.Tests
         {
             OpenAiApi openAi = new OpenAiApi(TestEnvironmentHelper.GetOpenAiApiKey());
 
-            ExtractionResult<IntInputType> extractedValue = await openAi.ExtractAsync<IntInputType>("It's 500£");
+            ExtractionResult<IntegerInputType> extractedValue = await openAi.ExtractAsync<IntegerInputType>("It's 500£");
 
             Assert.IsTrue(extractedValue.Valid);
             Assert.AreEqual(500, extractedValue.ExtractedValue!.Value);

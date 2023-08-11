@@ -1,4 +1,4 @@
-﻿namespace ScriptRunner.OpenAi.Models.InputTypes
+﻿namespace ScriptRunner.OpenAi.Models.Input.Types
 {
     public abstract class InputType<T>
     {

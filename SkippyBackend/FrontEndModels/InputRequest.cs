@@ -1,18 +1,19 @@
-﻿using System.Text.Json.Serialization;
+﻿using ScriptRunner.OpenAi.Models.Input;
+using System.Text.Json.Serialization;
 
 namespace SkippyBackend.FrontEndModels
 {
     public class InputRequest
     {
-        [JsonPropertyName("type")]
-        public string Type { get; set; }
+        [JsonPropertyName("info")]
+        public InputInfo Info { get; set; }
 
         [JsonPropertyName("displayMessage")]
         public DisplayMessage DisplayMessage { get; set; }
 
-        public InputRequest(Type type, DisplayMessage displayMessage)
+        public InputRequest(InputInfo info, DisplayMessage displayMessage)
         {
-            Type = type.ToString();
+            Info = info;
             DisplayMessage = displayMessage;
         }
     }

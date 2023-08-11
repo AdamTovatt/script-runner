@@ -35,5 +35,18 @@ namespace ScriptRunner.OpenAi.Helpers
                 return "any";
             }
         }
+
+        public static bool IsAnyOf(this Type type, params Type[] types)
+        {
+            foreach (Type singleType in types)
+                if (type == singleType) return true;
+
+            return false;
+        }
+
+        public static bool IsNullable(this Type type)
+        {
+            return type.IsClass || type.IsInterface || (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>));
+        }
     }
 }

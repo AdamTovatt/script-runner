@@ -1,4 +1,6 @@
-﻿namespace ScriptRunner.OpenAi.Models.Completion
+﻿using ScriptRunner.OpenAi.Models.Input;
+
+namespace ScriptRunner.OpenAi.Models.Completion
 {
     public class Communicator
     {
@@ -14,7 +16,7 @@
         public delegate void SystemMessageAddedHandler(object sender, string message);
         public event SystemMessageAddedHandler? OnSystemMessageAdded;
 
-        public delegate void WantsInputHandler(object sender, Type inputType, string inputMessage);
+        public delegate void WantsInputHandler(InputHandler sender, InputInfo inputInfo);
         public event WantsInputHandler? OnWantsInput;
 
         public void InvokeOnCompletionMessageRecieved(object sender, string message)
@@ -44,11 +46,11 @@
         /// <param name="type"></param>
         /// <param name="inputMessage"></param>
         /// <returns></returns>
-        public bool InvokeOnWantsInput(object sender, Type type, string inputMessage)
+        public bool InvokeOnWantsInput(InputHandler sender, InputInfo inputInfo)
         {
             if (OnWantsInput == null) return false;
 
-            OnWantsInput.Invoke(sender, type, inputMessage);
+            OnWantsInput.Invoke(sender, inputInfo);
             return true;
         }
     }

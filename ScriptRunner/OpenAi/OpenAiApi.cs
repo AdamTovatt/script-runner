@@ -3,7 +3,7 @@ using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text;
 using ScriptRunner.OpenAi.Models.Completion;
-using ScriptRunner.OpenAi.Models.InputTypes;
+using ScriptRunner.OpenAi.Models.Input.Types;
 
 namespace ScriptRunner.OpenAi
 {
@@ -117,12 +117,11 @@ namespace ScriptRunner.OpenAi
 
             if (type == typeof(BoolInputType))
                 return (await ExtractBoolAsync(message) as ExtractionResult<T>)!;
-            else if (type == typeof(IntInputType))
+            else if (type == typeof(IntegerInputType))
                 return (await ExtractIntAsync(message) as ExtractionResult<T>)!;
             else if (type == typeof(DecimalInputType))
                 return (await ExtractDecimalAsync(message) as ExtractionResult<T>)!;
-            else
-                if (type == typeof(StringInputType))
+            else if (type == typeof(StringInputType))
                 return (await ExtractStringAsync(message) as ExtractionResult<T>)!;
 
             throw new InvalidOperationException($"Extracting the type {type} is not supported. ");
@@ -135,7 +134,28 @@ namespace ScriptRunner.OpenAi
         /// <returns></returns>
         private async Task<ExtractionResult<StringInputType>> ExtractStringAsync(string message)
         {
-            ExtractionResult<StringInputType> result = new ExtractionResult<StringInputType>(await GetSingleAnswerAsync("You will be given a message that is talking about a specific item. Answer with only with that item! Answer with (invalid) if not possible", message));
+            CompletionParameter completionParameter = new CompletionParameter(Model.Default);
+            completionParameter.AddSystemMessage("You will be given a message that is talking about a specific item. Answer with only with that item! Answer with (invalid) if not possible. Here are some examples: ");
+            completionParameter.AddUserMessage("my car");
+            completionParameter.AddAssistantMessage("car");
+            completionParameter.AddUserMessage("it is my dog");
+            completionParameter.AddAssistantMessage("dog");
+            completionParameter.AddUserMessage("Some random tool in my shed");
+            completionParameter.AddAssistantMessage("tool");
+            completionParameter.AddUserMessage("019232");
+            completionParameter.AddAssistantMessage("(invalid)");
+            completionParameter.AddUserMessage("this can't really be turned into an item");
+            completionParameter.AddAssistantMessage("(invalid)");
+
+            completionParameter.AddSystemMessage("Now the real message from the user. Answer only with the item that the message is about or (invalid) if not possible. ");
+
+            completionParameter.AddUserMessage(message);
+
+            CompletionResult completionResult = await CompleteAsync(completionParameter);
+
+            string completionResultString = completionResult.Choices.First().Message.Content;
+
+            ExtractionResult<StringInputType> result = new ExtractionResult<StringInputType>(completionResultString);
 
             return result;
         }
@@ -159,12 +179,13 @@ namespace ScriptRunner.OpenAi
 
             return result;
         }
-        private async Task<ExtractionResult<IntInputType>> ExtractIntAsync(string message)
+
+        private async Task<ExtractionResult<IntegerInputType>> ExtractIntAsync(string message)
         {
-            ExtractionResult<IntInputType> result = new ExtractionResult<IntInputType>(message);
+            ExtractionResult<IntegerInputType> result = new ExtractionResult<IntegerInputType>(message);
 
             if (!result.Valid)
-                result = new ExtractionResult<IntInputType>(await GetSingleAnswerAsync("You will be given a string with a number and some other things. Answer with only the number! Answer with (invalid) if not possible", message));
+                result = new ExtractionResult<IntegerInputType>(await GetSingleAnswerAsync("You will be given a string with a number and some other things. Answer with only the number! Answer with (invalid) if not possible", message));
 
             return result;
         }

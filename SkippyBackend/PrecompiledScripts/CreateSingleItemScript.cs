@@ -1,7 +1,8 @@
 ﻿using ScriptRunner;
 using ScriptRunner.DocumentationAttributes;
 using ScriptRunner.OpenAi;
-using ScriptRunner.OpenAi.Models.InputTypes;
+using ScriptRunner.OpenAi.Models.Input;
+using ScriptRunner.OpenAi.Models.Input.Types;
 
 namespace SkippyBackend.PrecompiledScripts
 {
@@ -15,14 +16,14 @@ namespace SkippyBackend.PrecompiledScripts
         {
             OpenAiApi ai = Context.Conversation.OpenAi; // for shorter code later :weary:
 
-            string rawItem = await Context.Conversation.GetInputFromUser<string>("What item do you want to insure?");
-            string item = (await ai.ExtractAsync<StringInputType>(rawItem)).ExtractedValue!.Value;
+            if (Context == null || Context.Conversation == null) // this should never happen
+                return "Something went wrong, please try again later.";
+            
+            string? item = (await Context.Conversation.Input.GetAsync<string?>("What item do you want to insure?", true, retryPromptMessage: "Sorry, I didn't understand how that's an item that can be insured, can you please clarify the item you want to insure?"));
 
-            string rawItemValue = await Context.Conversation.GetInputFromUser<string>($"What would your {item} cost to replace?");
-            decimal itemValue = (await ai.ExtractAsync<DecimalInputType>(rawItemValue)).ExtractedValue!.Value;
+            decimal itemValue = (await Context.Conversation.Input.GetAsync<decimal?>($"What would your {item} cost to replace?", true, retryPromptMessage: "That's not valid number that I can understand as the value of your item, please clarify. The value of the item. ")).Value;
 
-            string rawRecentClaims = await Context.Conversation.GetInputFromUser<string>("Have you had any recent claims?");
-            bool recentClaims = (await ai.ExtractAsync<BoolInputType>(rawRecentClaims)).ExtractedValue!.Value;
+            bool recentClaims = (await Context.Conversation.Input.GetAsync<bool?>("Have you had any recent claims?", true, retryPromptMessage: "Is that a yes or a no?")).Value;
 
             return $"A single item cover was created for the item \"{item}\" with the value of {itemValue}£ and recent claims is: {recentClaims}. (not really)";
         }

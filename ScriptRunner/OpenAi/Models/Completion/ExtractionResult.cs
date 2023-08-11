@@ -1,4 +1,4 @@
-﻿using ScriptRunner.OpenAi.Models.InputTypes;
+﻿using ScriptRunner.OpenAi.Models.Input.Types;
 using System.Globalization;
 
 namespace ScriptRunner.OpenAi.Models.Completion
@@ -36,10 +36,10 @@ namespace ScriptRunner.OpenAi.Models.Completion
                 else
                     Valid = false;
             }
-            else if (type == typeof(IntInputType))
+            else if (type == typeof(IntegerInputType))
             {
                 if (int.TryParse(message, NumberStyles.Integer, CultureInfo.InvariantCulture, out int intResult))
-                    ExtractedValue = (T)(IInputType)new IntInputType(intResult);
+                    ExtractedValue = (T)(IInputType)new IntegerInputType(intResult);
                 else
                     Valid = false;
             }

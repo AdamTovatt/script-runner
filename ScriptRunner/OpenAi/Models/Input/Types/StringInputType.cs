@@ -1,4 +1,4 @@
-﻿namespace ScriptRunner.OpenAi.Models.InputTypes
+﻿namespace ScriptRunner.OpenAi.Models.Input.Types
 {
     public class StringInputType : InputType<string>, IInputType
     {
