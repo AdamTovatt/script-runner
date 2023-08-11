@@ -136,8 +136,8 @@ namespace ScriptRunner.OpenAi
         {
             CompletionParameter completionParameter = new CompletionParameter(Model.Default);
             completionParameter.AddSystemMessage("You will be given a message that is talking about a specific item. Answer with only with that item! Answer with (invalid) if not possible. Here are some examples: ");
-            completionParameter.AddUserMessage("my car");
-            completionParameter.AddAssistantMessage("car");
+            completionParameter.AddUserMessage("I want to insure my hairdryer");
+            completionParameter.AddAssistantMessage("hairdryer");
             completionParameter.AddUserMessage("it is my dog");
             completionParameter.AddAssistantMessage("dog");
             completionParameter.AddUserMessage("Some random tool in my shed");

@@ -116,7 +116,7 @@ namespace SkippyBackend.Hubs.SignalRWebpack
 
         private void DisplayMessage(DisplayMessage displayMessage)
         {
-            Clients.All.SendAsync("messageReceived", displayMessage);
+            Clients.Client(Context.ConnectionId).SendAsync("messageReceived", displayMessage);
         }
 
         private void DisplayMessage(string text, string color, int align)
@@ -124,6 +124,16 @@ namespace SkippyBackend.Hubs.SignalRWebpack
             DisplayMessage displayMessage = new DisplayMessage(text, color, align);
 
             DisplayMessage(displayMessage);
+        }
+
+        private void ShowInfoMessage(InfoMessage infoMessage)
+        {
+            Clients.Client(Context.ConnectionId).SendAsync("showInfoMessage", infoMessage);
+        }
+
+        private void ShowTypingAnimation()
+        {
+            Clients.Client(Context.ConnectionId).SendAsync("showTypingAnimation");
         }
 
         // RPC
@@ -142,6 +152,7 @@ namespace SkippyBackend.Hubs.SignalRWebpack
             DisplayMessage(input, CurrentClientData.ChatConfiguration.Colors["Accent2"], 1);
 
             await Task.CompletedTask;
+            ShowTypingAnimation();
             CurrentClientData.Conversation.ActiveConversation.Input.AddResponse(input);
         }
 
@@ -149,12 +160,12 @@ namespace SkippyBackend.Hubs.SignalRWebpack
         {
             DisplayMessage promptMessage = new DisplayMessage(inputInfo.Message, CurrentClientData.ChatConfiguration.Colors["Accent1"], -1);
             DisplayMessage userResponseInfo = new DisplayMessage("", CurrentClientData.ChatConfiguration.Colors["Accent2"], 1);
-            Clients.All.SendAsync("requestInput", new InputRequest(inputInfo, promptMessage, userResponseInfo));
+            Clients.Client(Context.ConnectionId).SendAsync("requestInput", new InputRequest(inputInfo, promptMessage, userResponseInfo));
         }
 
         private void ConversationSystemMessageAdded(object sender, string message)
         {
-            DisplayMessage(message, CurrentClientData.ChatConfiguration.Colors["Success"], 0);
+            ShowInfoMessage(new InfoMessage(message, InfoMessage.InfoMessageType.Success));
         }
 
         private void ConversationMessageRecieved(object sender, string message)
@@ -164,7 +175,7 @@ namespace SkippyBackend.Hubs.SignalRWebpack
 
         private void ConversationFunctionCallWasMade(object sender, FunctionCall functionCall)
         {
-            DisplayMessage($"(function call: {functionCall.Name})", CurrentClientData.ChatConfiguration.Colors["Success"], 0);
+            ShowInfoMessage(new InfoMessage($"(function call: {functionCall.Name})", InfoMessage.InfoMessageType.Success));
         }
 
         private void ConversationErrorOccured(object sender, string message)
@@ -183,6 +194,8 @@ namespace SkippyBackend.Hubs.SignalRWebpack
                 conversation.Communicator.OnErrorOccured += ConversationErrorOccured;
                 conversation.Communicator.OnSystemMessageAdded += ConversationSystemMessageAdded;
                 conversation.Communicator.OnWantsInput += ConversationWantsInput;
+
+                ShowTypingAnimation();
 
                 await conversation.CompleteAsync(new SkippyContext(CurrentClientData));
             }
