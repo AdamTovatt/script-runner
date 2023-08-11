@@ -44,7 +44,7 @@ namespace ScriptRunner.OpenAi.Models.Input
             return await GetAsync<T>(new InputInfo(typeof(T), inputMessage, subType, choices));
         }
 
-        public async Task<T?> GetAsync<T>(string inputMessage, bool ensureNotNull, int? maxAttemptCount = null, string? retryPromptMessage = null, string? subType = null)
+        public async Task<T?> GetAsync<T>(string inputMessage, bool ensureNotNull, int? maxAttemptCount = null, string? retryPromptMessage = null, string? subType = null, List<InputChoice>? choices = null)
         {
             if (!typeof(T).IsNullable())
                 throw new ArgumentException("The type T must be nullable. When ensuring that input is not null. ");
@@ -54,9 +54,9 @@ namespace ScriptRunner.OpenAi.Models.Input
             int attempts = 0;
             while (maxAttemptCount == null || attempts < maxAttemptCount)
             {
-                T? result = await GetAsync<T?>(new InputInfo(typeof(T), messageToUse, subType));
+                T? result = await GetAsync<T?>(new InputInfo(typeof(T), messageToUse, subType, choices));
 
-                if(ensureNotNull && result != null && typeof(T) == typeof(string)) // for strings we check for a mentioned item if ensure not null is set to true
+                if (ensureNotNull && result != null && typeof(T) == typeof(string)) // for strings we check for a mentioned item if ensure not null is set to true
                 {
                     ExtractionResult<StringInputType> extractionResult = await Conversation.OpenAi.ExtractAsync<StringInputType>((string)(object)result!);
 
@@ -139,9 +139,9 @@ namespace ScriptRunner.OpenAi.Models.Input
                 {
                     decimal? decimalValue = (await Conversation.OpenAi.ExtractAsync<DecimalInputType>(stringValue)).ExtractedValue?.Value;
 
-                    if (type == typeof(double))
+                    if (type.IsAnyOf(typeof(double), typeof(double?)))
                         return (double?)decimalValue;
-                    if (type == typeof(float))
+                    if (type.IsAnyOf(typeof(float), typeof(float?)))
                         return (float?)decimalValue;
 
                     return decimalValue;
@@ -149,13 +149,23 @@ namespace ScriptRunner.OpenAi.Models.Input
 
                 if (type.IsAnyOf(typeof(int), typeof(long), typeof(short), typeof(byte), typeof(int?), typeof(long?), typeof(short?), typeof(byte?))) // handle integer types
                 {
-                    long? longValue = (await Conversation.OpenAi.ExtractAsync<IntegerInputType>(stringValue)).ExtractedValue?.Value;
+                    long? longValue = null;
 
-                    if (type == typeof(int))
+                    if (inputInfo.HasChoices) // if there are choices, let's first try to use them to get the value
+                    {
+                        InputChoice? inputChoice = inputInfo.GetInputChoiceByMessage(stringValue);
+                        if (inputChoice != null && inputChoice.Value != null && inputChoice.Value.ToString() != null)
+                            longValue = (await Conversation.OpenAi.ExtractAsync<IntegerInputType>(inputChoice.Value.ToString()!)).ExtractedValue?.Value;
+                    }
+
+                    if (longValue == null) // if it's still null, maybe because the user wrote something that isn't an option, then we'll use what they wrote normally
+                        longValue = (await Conversation.OpenAi.ExtractAsync<IntegerInputType>(stringValue)).ExtractedValue?.Value;
+
+                    if (type.IsAnyOf(typeof(int), typeof(int?)))
                         return (int?)longValue;
-                    if (type == typeof(short))
+                    if (type.IsAnyOf(typeof(short), typeof(short?)))
                         return (short?)longValue;
-                    if (type == typeof(byte))
+                    if (type.IsAnyOf(typeof(byte), typeof(byte?)))
                         return (byte?)longValue;
 
                     return longValue;
@@ -163,10 +173,21 @@ namespace ScriptRunner.OpenAi.Models.Input
 
                 if (type.IsAnyOf(typeof(bool), typeof(bool?))) // handle bool
                 {
-                    if (inputInfo.Choices == null || inputInfo.Choices.Count == 0) // if no choices were provided we assume that the bool was sent as a string
-                        return (await Conversation.OpenAi.ExtractAsync<BoolInputType>(stringValue)).ExtractedValue?.Value;
+                    bool? boolValue = null;
 
-                    return inputInfo.Choices.FirstOrDefault(choice => choice.DisplayValue == stringValue)?.Value; // if choices were provided we take the choice that represents the right value
+                    if(inputInfo.HasChoices) // if it has choices we'll try to use them to get the value
+                    {
+                        InputChoice? inputChoice = inputInfo.GetInputChoiceByMessage(stringValue);
+                        if (inputChoice != null)
+                        {
+                            boolValue = (bool?)inputChoice.Value;
+                        }
+                    }
+
+                    if (boolValue == null) // if it's still null, maybe because the user wrote something that isn't an option, then we'll use what they wrote normally
+                        boolValue = (await Conversation.OpenAi.ExtractAsync<BoolInputType>(stringValue)).ExtractedValue?.Value;
+
+                    return boolValue;
                 }
 
                 if (type == typeof(InputChoice)) // if the type is an input choice we want to return the choice that matches the input string
@@ -202,7 +223,7 @@ namespace ScriptRunner.OpenAi.Models.Input
         /// </summary>
         private InputInfo FinalizeInputInfo(Type type, InputInfo inputInfo)
         {
-            if (type == typeof(bool)) // if it is a bool we want to make sure the right choices exist
+            if (type.IsAnyOf(typeof(bool), typeof(bool?))) // if it is a bool we want to make sure the right choices exist
             {
                 if (inputInfo.Choices == null || inputInfo.Choices.Count == 0)
                     inputInfo.AddChoices(new InputChoice(true, "Yes"), new InputChoice(false, "No"));

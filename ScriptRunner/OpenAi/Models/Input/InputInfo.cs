@@ -7,6 +7,7 @@
         public string DetailedType { get; private set; }
         public string? SubType { get; private set; }
         public List<InputChoice>? Choices { get; set; }
+        public bool HasChoices { get { return Choices != null && Choices.Any(); } }
 
         public InputInfo(Type type, string message, string? subType = null, List<InputChoice>? choices = null)
         {
@@ -34,7 +35,7 @@
         {
             if (Choices == null) return null;
 
-            return Choices.FirstOrDefault(c => c.DisplayValue == message);
+            return Choices.FirstOrDefault(c => c.DisplayValue.ToLower() == message.ToLower());
         }
     }
 }

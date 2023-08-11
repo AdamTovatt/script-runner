@@ -11,10 +11,14 @@ namespace SkippyBackend.FrontEndModels
         [JsonPropertyName("displayMessage")]
         public DisplayMessage DisplayMessage { get; set; }
 
-        public InputRequest(InputInfo info, DisplayMessage displayMessage)
+        [JsonPropertyName("userResponseInfo")]
+        public DisplayMessage UserResponseInfo { get; set; }
+
+        public InputRequest(InputInfo info, DisplayMessage displayMessage, DisplayMessage userResponseInfo)
         {
             Info = info;
             DisplayMessage = displayMessage;
+            UserResponseInfo = userResponseInfo;
         }
     }
 }

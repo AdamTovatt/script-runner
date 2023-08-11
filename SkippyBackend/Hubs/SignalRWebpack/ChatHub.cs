@@ -147,7 +147,9 @@ namespace SkippyBackend.Hubs.SignalRWebpack
 
         private void ConversationWantsInput(object sender, InputInfo inputInfo)
         {
-            Clients.All.SendAsync("requestInput", new InputRequest(inputInfo, new DisplayMessage(inputInfo.Message, CurrentClientData.ChatConfiguration.Colors["Accent1"], -1)));
+            DisplayMessage promptMessage = new DisplayMessage(inputInfo.Message, CurrentClientData.ChatConfiguration.Colors["Accent1"], -1);
+            DisplayMessage userResponseInfo = new DisplayMessage("", CurrentClientData.ChatConfiguration.Colors["Accent2"], 1);
+            Clients.All.SendAsync("requestInput", new InputRequest(inputInfo, promptMessage, userResponseInfo));
         }
 
         private void ConversationSystemMessageAdded(object sender, string message)
