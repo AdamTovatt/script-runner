@@ -61,7 +61,8 @@ namespace SkippyBackend.Hubs.SignalRWebpack
                                 typeof(CreateSingleItemScript),
                                 typeof(ChangeAssistantColorScript),
                                 typeof(ChangeUserColorScript),
-                                typeof(UploadSvgToCloudinaryScript)
+                                typeof(UploadSvgToCloudinaryScript),
+                                typeof(GetFlightsScript)
                                 )
                             );
                 return functionLookup;
