@@ -56,7 +56,8 @@ namespace SkippyBackend.PrecompiledScripts
                     dateInputMessage = "That's not a date that I can understand. Please answer with only the date of the current month like \"12\" or with the full date in the format yyyy-MM-dd";
             }
 
-            int numberOfPassengers = (await Context.Conversation.Input.GetAsync<int?>("How many passengers are you?", true))!.Value;
+            List<InputChoice> passengerChoices = new List<InputChoice>() { new InputChoice(1), new InputChoice(2), new InputChoice(3), new InputChoice(4) };
+            int numberOfPassengers = (await Context.Conversation.Input.GetAsync<int?>("How many passengers are you?", true, choices: passengerChoices))!.Value;
 
             HttpResponseMessage offersResponse = await httpClient.GetAsync($"https://www.flysas.com/api/offers/flights/?to={toCode}&from={fromCode}&outDate={date.ToString("yyyyMMdd")}&yth={numberOfPassengers}&channel=web&cepId=YOUTH");
 
@@ -64,8 +65,12 @@ namespace SkippyBackend.PrecompiledScripts
                 return "There was an error when getting the list of available flights";
 
             string offersJson = await offersResponse.Content.ReadAsStringAsync();
+            SearchFlightResponse? flightOffers = SearchFlightResponse.FromJson(offersJson);
 
-            return "not implemented";
+            if (flightOffers == null)
+                return "No flight offers where found";
+
+            return $"The user has to book the flights themselves but here is information about the available flights close to the specified date: \n{flightOffers.ToJson()}";
         }
 
         private async Task<string?> GetAirportCodeForLocation(string location, CountryInfo countryInfo)
@@ -222,6 +227,60 @@ namespace SkippyBackend.PrecompiledScripts
 
             [JsonPropertyName("cityName")]
             public string? CityName { get; set; }
+        }
+
+        public class SearchFlightResponse
+        {
+            [JsonPropertyName("tabsInfo")]
+            public TabsInfo? TabsInfo { get; set; }
+
+            [JsonPropertyName("currency")]
+            public Currency? Curerncy { get; set; }
+
+            [JsonPropertyName("outboundLowestFare")]
+            public Fare? LowestFare { get; set; }
+
+            public static SearchFlightResponse? FromJson(string json)
+            {
+                if (string.IsNullOrEmpty(json)) return null;
+
+                return JsonSerializer.Deserialize<SearchFlightResponse>(json);
+            }
+
+            public string ToJson()
+            {
+                return JsonSerializer.Serialize(this);
+            }
+        }
+
+        public class TabsInfo
+        {
+            [JsonPropertyName("outboundInfo")]
+            public List<OutboundInfo>? OutboundInfos { get; set; }
+        }
+
+        public class OutboundInfo
+        {
+            [JsonPropertyName("date")]
+            public DateTime Date { get; set; }
+
+            [JsonPropertyName("price")]
+            public string? Price { get; set; }
+        }
+
+        public class Currency
+        {
+            [JsonPropertyName("code")]
+            public string? Code { get; set; }
+        }
+
+        public class Fare
+        {
+            [JsonPropertyName("price")]
+            public string? Price { get; set; }
+
+            [JsonPropertyName("product")]
+            public string? Product { get; set; }
         }
     }
 }
