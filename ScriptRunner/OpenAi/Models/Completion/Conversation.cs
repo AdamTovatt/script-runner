@@ -6,28 +6,86 @@ using ScriptRunner.Providers;
 using ScriptRunner.ScriptConvertion;
 using ScriptRunner.Workflows;
 using ScriptRunner.Workflows.Scripts;
-using System.Text;
 using System.Text.Json;
 
 namespace ScriptRunner.OpenAi.Models.Completion
 {
     public class Conversation
     {
+        /// <summary>
+        /// This will control if a system message should be added when a function is called, sometimes, adding a system message makes the bot
+        /// start to say that it is calling a function because it sees the system messages and starts to mimmic them.
+        /// This is obviously bad since then it just says that it's calling a function instead of actually doing it.
+        /// This allows the system messages to be turned off, can be used to turn them off if it seems like the bot is mimmicing the system messages too much
+        /// </summary>
+        public static bool AddSystemMessageOnFunctionCall { get; set; } = true;
+
+        /// <summary>
+        /// Used to communicate with the frontend, has loads of usefull events
+        /// </summary>
         public Communicator Communicator { get; set; }
+
+        /// <summary>
+        /// Reference to the open ai api
+        /// </summary>
         public OpenAiApi OpenAi { get; set; }
+
+        /// <summary>
+        /// The messages in this conversation
+        /// </summary>
         public List<Message> Messages { get; set; }
+
+        /// <summary>
+        /// The functions in this conversation
+        /// </summary>
         public List<Function>? Functions { get { if (FunctionLookup == null) return null; return FunctionLookup.GetFunctions(); } }
+
+        /// <summary>
+        /// The FunctionScriptLookup to use for the functions
+        /// </summary>
         public FunctionScriptLookup? FunctionLookup { get; set; }
+
+        /// <summary>
+        /// The model to use for completion
+        /// </summary>
         public string Model { get; set; }
+
+        /// <summary>
+        /// The size of this context in tokens, if this is not null, older messages will be removed to not run out of context
+        /// </summary>
         public int? TokenLimit { get; set; }
+
+        /// <summary>
+        /// Having child and parent conversations in a conversation allows us to have subconversations. Used together with ActiveConversation
+        /// </summary>
         public Conversation? ParentConversation { get; set; }
+
+        /// <summary>
+        /// Having child and parent conversations in a conversation allows us to have subconversations. Used together with ActiveConversation
+        /// </summary>
         public Conversation? ChildConversation { get; set; }
+
+        /// <summary>
+        /// Kind of deprecated, or this feature needs work if it's gonna work
+        /// </summary>
         public Workflow? Workflow { get; set; }
+
+        /// <summary>
+        /// Also kind of deprecated, or this feature needs work if it's gonna work
+        /// </summary>
         public IWorkflowProvider? WorkflowProvider { get; set; }
+
+        /// <summary>
+        /// The currently active conversation. This is necessary since a conversation can have subconversations and we want to use the one that is currently active and being used
+        /// </summary>
         public Conversation ActiveConversation { get { return GetActiveConversation(); } }
+
+        /// <summary>
+        /// Used to handle input to the conversation
+        /// </summary>
         public InputHandler Input { get; private set; }
 
-        private TokenCounter tokenCounter;
+        private TokenCounter tokenCounter; // used to count tokens of a message to know if we should remove the first messages to not run out of context
 
         public Conversation(OpenAiApi openAi, string model, int? tokenLimit = null)
         {
@@ -56,6 +114,10 @@ namespace ScriptRunner.OpenAi.Models.Completion
             }
         }
 
+        /// <summary>
+        /// Makes sure that a the result of a completion is correctly added to the conversation
+        /// </summary>
+        /// <param name="result"></param>
         public void Add(CompletionResult result)
         {
             foreach (Choice choice in result.Choices)
@@ -69,7 +131,11 @@ namespace ScriptRunner.OpenAi.Models.Completion
                     if (choice.Message != null && choice.Message.FunctionCall != null && choice.Message.FunctionCall.Arguments != null)
                         functionArguments = JsonSerializer.Serialize(choice.Message.FunctionCall.Arguments);
 
-                    Messages.Add(new Message(Role.System, functionArguments == null ? "(Calling function)" : $"(Calling function, paramters: {functionArguments})"));
+                    if (AddSystemMessageOnFunctionCall) // use property to determine if we should actually add a system message
+                    {
+                        // The next line will add a system message in the conversation that says that a function is being called
+                        Messages.Add(new Message(Role.System, functionArguments == null ? "(Calling function)" : $"(Calling function, paramters: {functionArguments})"));
+                    }
                 }
             }
 
@@ -82,6 +148,10 @@ namespace ScriptRunner.OpenAi.Models.Completion
             }
         }
 
+        /// <summary>
+        /// A completion parameter is used to send to the open ai api to get a completion result, it contains all the messages and functions
+        /// </summary>
+        /// <returns></returns>
         public CompletionParameter CreateCompletionParameter()
         {
             return new CompletionParameter(Model, Messages, Functions);
@@ -172,6 +242,11 @@ namespace ScriptRunner.OpenAi.Models.Completion
             return $"Workflow exited: {exitMessage}";
         }
 
+        /// <summary>
+        /// Will complete on this conversation using the provided context for the scripts
+        /// </summary>
+        /// <param name="context">The context to give to the scripts that might be run</param>
+        /// <returns>Nothing</returns>
         public async Task CompleteAsync(ScriptContext context)
         {
             try
