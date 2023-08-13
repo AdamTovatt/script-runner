@@ -19,6 +19,11 @@ namespace ScriptRunner.OpenAi.Models.Completion
         public delegate void WantsInputHandler(InputHandler sender, InputInfo inputInfo);
         public event WantsInputHandler? OnWantsInput;
 
+        /// <summary>
+        /// This method can be called to send a message from the bot to the chat
+        /// </summary>
+        /// <param name="sender">The origin of the event</param>
+        /// <param name="message">The message that is to be sent to the chat</param>
         public void InvokeOnCompletionMessageRecieved(object sender, string message)
         {
             OnCompletionMessageRecieved?.Invoke(sender, message);

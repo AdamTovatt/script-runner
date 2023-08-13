@@ -244,6 +244,7 @@ namespace ScriptRunner.OpenAi.Models.Completion
 
         /// <summary>
         /// Will complete on this conversation using the provided context for the scripts
+        /// Completing is the term used by OpenAi for generating a new message or function call from a given conversation
         /// </summary>
         /// <param name="context">The context to give to the scripts that might be run</param>
         /// <returns>Nothing</returns>
