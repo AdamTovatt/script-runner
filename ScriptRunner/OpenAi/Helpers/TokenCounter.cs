@@ -24,6 +24,12 @@ namespace ScriptRunner.OpenAi.Helpers
             }
             catch(NotImplementedException)
             {
+                if (counters.ContainsKey(Model.DefaultTokenCounter)) // check if the wanted model already exists, use it then
+                {
+                    tikToken = counters[Model.DefaultTokenCounter];
+                    return;
+                }
+
                 tikToken = TikToken.EncodingForModel(Model.DefaultTokenCounter); // couldn't create a new model for the wanted one, use default
                 counters.Add(Model.DefaultTokenCounter, tikToken);
             }
