@@ -1,22 +1,31 @@
-﻿using OpenAi.Models.Completion;
-using ScriptRunner.OpenAi.Models.Completion;
+﻿using ScriptRunner.OpenAi.Models.Completion;
 using TiktokenSharp;
 
 namespace ScriptRunner.OpenAi.Helpers
 {
     public class TokenCounter
     {
+        private static Dictionary<string, TikToken> counters = new Dictionary<string, TikToken>();
+
         private TikToken tikToken;
 
         public TokenCounter(string model)
         {
+            if(counters.ContainsKey(model)) // check if the wanted model already exists, use it then
+            {
+                tikToken = counters[model];
+                return;
+            }
+
             try
             {
-                tikToken = TikToken.EncodingForModel(model);
+                tikToken = TikToken.EncodingForModel(model); // create a new model
+                counters.Add(model, tikToken);
             }
             catch(NotImplementedException)
             {
-                tikToken = TikToken.EncodingForModel(Model.Gpt35Turbo);
+                tikToken = TikToken.EncodingForModel(Model.DefaultTokenCounter); // couldn't create a new model for the wanted one, use default
+                counters.Add(Model.DefaultTokenCounter, tikToken);
             }
         }
 
