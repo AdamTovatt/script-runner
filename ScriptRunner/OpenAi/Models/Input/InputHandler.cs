@@ -44,7 +44,7 @@ namespace ScriptRunner.OpenAi.Models.Input
             return await GetAsync<T>(new InputInfo(typeof(T), inputMessage, subType, choices));
         }
 
-        public async Task<T?> GetAsync<T>(string inputMessage, bool ensureNotNull, int? maxAttemptCount = null, string? retryPromptMessage = null, string? subType = null, List<InputChoice>? choices = null)
+        public async Task<T?> GetAsync<T>(string inputMessage, bool ensureNotNull, string? retryPromptMessage = null, int ? maxAttemptCount = null, string? subType = null, List<InputChoice>? choices = null)
         {
             if (!typeof(T).IsNullable())
                 throw new ArgumentException("The type T must be nullable. When ensuring that input is not null. ");
