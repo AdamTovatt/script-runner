@@ -22,6 +22,25 @@ namespace ScriptRunner.OpenAi.Models.Input
             DisplayValue = value?.ToString() ?? "(null)";
         }
 
+        /// <summary>
+        /// Will create a list of input choices given a list of some other object and a function to create the input choice from that object.
+        /// </summary>
+        /// <typeparam name="T">The type of objects to create input choices from</typeparam>
+        /// <param name="products">A list of objects of the type T to create input choices from</param>
+        /// <param name="choiceCreator">The function that creates an input choices from a object of type T</param>
+        /// <returns>A list of input choices</returns>
+        public static List<InputChoice> CreateList<T>(List<T> products, Func<T, InputChoice> choiceCreator)
+        {
+            List<InputChoice> inputChoices = new List<InputChoice>();
+
+            foreach(T item in products)
+            {
+                inputChoices.Add(choiceCreator(item));
+            }
+
+            return inputChoices;
+        }
+
         public override string ToString()
         {
             return DisplayValue;
