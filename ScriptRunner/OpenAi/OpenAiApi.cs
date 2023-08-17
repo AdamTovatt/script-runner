@@ -58,7 +58,15 @@ namespace ScriptRunner.OpenAi
             }
         }
 
-        private async Task<CompletionResult> CompleteAsync(CompletionParameter completionParameter)
+        /// <summary>
+        /// Will complete based on a completion parameter, usually you want to use a conversation and complete on that
+        /// but if you know what you are doing you can use this method directly
+        /// </summary>
+        /// <param name="completionParameter">The parameter to complete on</param>
+        /// <returns></returns>
+        /// <exception cref="NullReferenceException"></exception>
+        /// <exception cref="CompletionException"></exception>
+        public async Task<CompletionResult> CompleteAsync(CompletionParameter completionParameter)
         {
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, completionUrl);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
