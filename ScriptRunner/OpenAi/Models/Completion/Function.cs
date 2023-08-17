@@ -30,6 +30,11 @@ namespace ScriptRunner.OpenAi.Models.Completion
             Parameters = new ParameterCollection();
         }
 
+        public void AddParameter(Parameter parameter, bool required)
+        {
+            Parameters.Add(parameter, required);
+        }
+
         public void AddParameter(string name, Type type, string description, bool required)
         {
             Parameters.Add(new Parameter(name, type, description), required);
