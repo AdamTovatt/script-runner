@@ -63,9 +63,9 @@ namespace ScriptRunner.OpenAi
         /// but if you know what you are doing you can use this method directly
         /// </summary>
         /// <param name="completionParameter">The parameter to complete on</param>
-        /// <returns></returns>
-        /// <exception cref="NullReferenceException"></exception>
-        /// <exception cref="CompletionException"></exception>
+        /// <returns>A completion result of the type CompletionResult</returns>
+        /// <exception cref="NullReferenceException">If the deserialized completion result is null</exception>
+        /// <exception cref="CompletionException">If there was something wrong with completing</exception>
         public async Task<CompletionResult> CompleteAsync(CompletionParameter completionParameter)
         {
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, completionUrl);
