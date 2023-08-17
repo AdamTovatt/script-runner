@@ -37,7 +37,7 @@ namespace OpenAi.Models.Completion.Parameters
         /// <param name="description">The description of the parameter</param>
         /// <param name="type">The type of the parameter (as a json type)</param>
         /// <param name="genericType"></param>
-        public Parameter(string name, string description, string type, string? genericType)
+        public Parameter(string name, string type, string description, string? genericType = null)
         {
             if (!JsonType.IsValid(type))
                 throw new ArgumentException($"The given type \"{type}\" is not a valid json type. Should be one of {JsonType.GetPossibleValuesAsString()}");
