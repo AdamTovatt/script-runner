@@ -8,15 +8,13 @@ using SkippyBackend.Models;
 using SkippyBackend.PrecompiledScripts;
 using ScriptRunner.ScriptConvertion;
 using ScriptRunner.OpenAi;
-using ScriptRunner.Workflows.Scripts;
 using ScriptRunner.OpenAi.Models.Completion;
-using System.ComponentModel;
-using System.Text.Unicode;
-using System.Text;
 using ScriptRunner.OpenAi.Models.Input;
+using Microsoft.AspNetCore.Authorization;
 
 namespace SkippyBackend.Hubs.SignalRWebpack
 {
+    [Authorize("admin")]
     [EnableCors]
     public class ChatHub : Hub
     {
@@ -88,8 +86,14 @@ namespace SkippyBackend.Hubs.SignalRWebpack
         public override async Task OnConnectedAsync()
         {
             await base.OnConnectedAsync();
-
             ChatConfiguration chatConfiguration = new ChatConfiguration();
+
+            if (Context.User == null || !Context.User.IsInAllowedRoles(new List<string>() { "admin", "skippy-user" }))
+            {
+                DisplayMessage(new DisplayMessage("You are not logged into an account with access to this chat", chatConfiguration.Colors["Accent1"], -1));
+                IClientProxy client = Clients.Client(Context.ConnectionId);
+            }
+
             Conversation conversation = new Conversation(OpenAi, Model.Gpt35Turbo16k, 15000);
             FunctionLookup.SetClaimsPrincipal(Context.User);
 

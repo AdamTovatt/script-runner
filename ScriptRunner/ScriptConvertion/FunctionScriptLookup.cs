@@ -1,4 +1,5 @@
-﻿using ScriptRunner.Models;
+﻿using ScriptRunner.Helpers;
+using ScriptRunner.Models;
 using ScriptRunner.OpenAi.Models.Completion;
 using ScriptRunner.Providers;
 using System.Security.Claims;
@@ -79,7 +80,7 @@ namespace ScriptRunner.ScriptConvertion
                         if (claimsPrincipal == null)
                             throw new InvalidOperationException($"Claims principal as not been set, but the function ({function.Name}) requires a claims principal. Use .SetClaimsPrincipal() on the FunctionScriptLookup before loading functions that have specific allowed roles. ");
 
-                        if (!IsInAllowedRoles(claimsPrincipal, function.AllowedRoles))
+                        if (!claimsPrincipal.IsInAllowedRoles(function.AllowedRoles))
                             continue; // skip this function, since the user is not in any of the allowed roles
                     }
 
@@ -93,20 +94,6 @@ namespace ScriptRunner.ScriptConvertion
             {
                 return convertionException.Errors;
             }
-        }
-
-        private bool IsInAllowedRoles(ClaimsPrincipal claimsPrincipal, IEnumerable<string> allowedRoles)
-        {
-            if (claimsPrincipal.Identity == null)
-                return false;
-
-            foreach (string role in allowedRoles)
-            {
-                if (((ClaimsIdentity)claimsPrincipal.Identity).Claims.Any(x => x.Type == "permissions" && x.Value == role))
-                    return true;
-            }
-
-            return false;
         }
 
         /// <summary>

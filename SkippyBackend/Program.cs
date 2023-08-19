@@ -3,11 +3,16 @@ using Microsoft.IdentityModel.Tokens;
 using SkippyBackend.Hubs.SignalRWebpack;
 using System.Security.Claims;
 using Microsoft.Extensions.Primitives;
+using SkippyBackend.Helpers;
+using Microsoft.AspNetCore.Authorization;
 
 namespace SkippyBackend
 {
     public class Program
     {
+        private const string authDomain = "https://sakur.eu.auth0.com/";
+        private const string authAudience = "https://sakurapi.se/skippy-api";
+
         public static void Main(string[] args)
         {
             WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
@@ -22,8 +27,8 @@ namespace SkippyBackend
                 options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
             }).AddJwtBearer(options =>
             {
-                options.Authority = "https://sakur.eu.auth0.com/";
-                options.Audience = "https://sakurapi.se/skippy-api";
+                options.Authority = authDomain;
+                options.Audience = authAudience;
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
                     NameClaimType = ClaimTypes.NameIdentifier
@@ -53,6 +58,13 @@ namespace SkippyBackend
                     }
                 };
             });
+
+            builder.Services.AddAuthorization(options =>
+            {
+                options.AddPolicy("admin", policy => policy.Requirements.Add(new HasScopeRequirement(authDomain, "admin", "skippy-user")));
+            });
+
+            builder.Services.AddSingleton<IAuthorizationHandler, HasScopeHandler>();
 
             WebApplication app = builder.Build();
 
