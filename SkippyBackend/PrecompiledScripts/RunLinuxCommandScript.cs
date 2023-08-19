@@ -10,6 +10,7 @@ namespace SkippyBackend.PrecompiledScripts
     {
         public RunLinuxCommandScript(ScriptContext context) : base(context) { }
 
+        [ScriptStart]
         [Summary("Will run a linux command given the command string and the working directory to run the command in. ")]
         [Parameter("command", "The command to run")]
         [Parameter("workingDirectory", "The working directory to run the command in")]
