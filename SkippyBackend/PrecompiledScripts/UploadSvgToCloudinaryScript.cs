@@ -1,6 +1,7 @@
 ﻿using ScriptRunner;
 using ScriptRunner.DocumentationAttributes;
 using SkippyBackend.Helpers;
+using SkippyBackend.Models;
 using System.Text;
 
 namespace SkippyBackend.PrecompiledScripts
@@ -11,7 +12,7 @@ namespace SkippyBackend.PrecompiledScripts
 
         [ScriptStart]
         [Parameter("svgName", "The name of the svg file. The name of the image.")]
-        [AllowedRoles("admin")]
+        [AllowedRoles(Roles.Admin)]
         public async Task<string> UploadSvgToCloudinary(string svgName)
         {
             try
