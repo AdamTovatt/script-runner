@@ -18,7 +18,15 @@ namespace SkippyBackend.PrecompiledScripts
         public async Task<string> RunLinuxCommand(string command, string workingDirectory)
         {
             Command commandObject = new Command(command, workingDirectory);
-            return await commandObject.RunAsync();
+            string commandResult = await commandObject.RunAsync();
+
+            if (commandResult.Length > 50)
+            {
+                Context.Conversation.Communicator.InvokeOnCompletionMessageRecieved(this, commandResult);
+                return "(command result was sent in a separate message to the user)";
+            }
+
+            return commandResult;
         }
 
         public class Command
