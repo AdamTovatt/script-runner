@@ -86,14 +86,8 @@ namespace SkippyBackend.Hubs.SignalRWebpack
         public override async Task OnConnectedAsync()
         {
             await base.OnConnectedAsync();
+
             ChatConfiguration chatConfiguration = new ChatConfiguration();
-
-            if (Context.User == null || !Context.User.IsInAllowedRoles(new List<string>() { "admin", "skippy-user" }))
-            {
-                DisplayMessage(new DisplayMessage("You are not logged into an account with access to this chat", chatConfiguration.Colors["Accent1"], -1));
-                IClientProxy client = Clients.Client(Context.ConnectionId);
-            }
-
             Conversation conversation = new Conversation(OpenAi, Model.Gpt35Turbo16k, 15000);
             FunctionLookup.SetClaimsPrincipal(Context.User);
 
