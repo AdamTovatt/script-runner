@@ -2,6 +2,7 @@
 using ScriptRunner.OpenAi.Models.Completion;
 using ScriptRunner.OpenAi.Models.Input.Types;
 using System;
+using System.Buffers.Text;
 using System.Text;
 
 namespace ScriptRunner.OpenAi.Models.Input
@@ -20,6 +21,11 @@ namespace ScriptRunner.OpenAi.Models.Input
 
         private object userInputStreamLock = new object(); // used to lock the input stream when it is being used from one thread
         private MemoryStream? userInputStream; // the input stream that the input of the user will be written to
+
+        /// <summary>
+        /// Will contain information about the currently requested input
+        /// </summary>
+        public InputInfo? CurrentInputInfo { get; private set; }
 
         public InputHandler(Conversation conversation)
         {
@@ -44,7 +50,7 @@ namespace ScriptRunner.OpenAi.Models.Input
             return await GetAsync<T>(new InputInfo(typeof(T), inputMessage, subType, choices));
         }
 
-        public async Task<T?> GetAsync<T>(string inputMessage, bool ensureNotNull, string? retryPromptMessage = null, int ? maxAttemptCount = null, string? subType = null, List<InputChoice>? choices = null)
+        public async Task<T?> GetAsync<T>(string inputMessage, bool ensureNotNull, string? retryPromptMessage = null, int? maxAttemptCount = null, string? subType = null, List<InputChoice>? choices = null)
         {
             if (!typeof(T).IsNullable())
                 throw new ArgumentException("The type T must be nullable. When ensuring that input is not null. ");
@@ -92,7 +98,11 @@ namespace ScriptRunner.OpenAi.Models.Input
 
             using (userInputStream = new MemoryStream())
             {
-                if (!Conversation.Communicator.InvokeOnWantsInput(this, FinalizeInputInfo(typeof(T), inputInfo))) // invoke the event that the communicator needs to handle so that an input request can be sent to frontend
+                InputInfo finalizedInputInfo = FinalizeInputInfo(typeof(T), inputInfo);
+
+                CurrentInputInfo = finalizedInputInfo;
+
+                if (!Conversation.Communicator.InvokeOnWantsInput(this, finalizedInputInfo)) // invoke the event that the communicator needs to handle so that an input request can be sent to frontend
                     throw new InvalidOperationException("An attempt to take user input from a conversation where the communicator hasn't been correctly subscribed to was made. Make sure to subscribe to and handle the OnWantsInput event. ");
 
                 while (true)
@@ -109,6 +119,7 @@ namespace ScriptRunner.OpenAi.Models.Input
                 }
             }
 
+            CurrentInputInfo = null;
             userInputStream = null;
 
             try
@@ -127,7 +138,7 @@ namespace ScriptRunner.OpenAi.Models.Input
         private async Task<object?> RefineUserInputResultAsync(Type type, byte[] result, InputInfo inputInfo)
         {
             if (type == typeof(byte[])) // handle byte[]
-                return result;
+                return Convert.FromBase64String(Encoding.UTF8.GetString(result));
             else // all other types will be handled through the string representation of the input
             {
                 string stringValue = Encoding.UTF8.GetString(result); // get the string input. This is can probably be seen as the text of the message in a way
@@ -175,7 +186,7 @@ namespace ScriptRunner.OpenAi.Models.Input
                 {
                     bool? boolValue = null;
 
-                    if(inputInfo.HasChoices) // if it has choices we'll try to use them to get the value
+                    if (inputInfo.HasChoices) // if it has choices we'll try to use them to get the value
                     {
                         InputChoice? inputChoice = inputInfo.GetInputChoiceByMessage(stringValue);
                         if (inputChoice != null)
