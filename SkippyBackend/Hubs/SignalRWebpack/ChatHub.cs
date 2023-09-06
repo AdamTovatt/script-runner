@@ -63,8 +63,6 @@ namespace SkippyBackend.Hubs.SignalRWebpack
                                 typeof(UploadSvgToCloudinaryScript),
                                 typeof(GetFlightsScript),
                                 typeof(RunLinuxCommandScript),
-                                typeof(ReadImageScript),
-                                typeof(SubmitReceiptScript),
                                 typeof(SendTextFileScript)
                                 )
                             );
