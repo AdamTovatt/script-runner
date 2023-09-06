@@ -182,6 +182,17 @@ namespace ScriptRunner.OpenAi.Models.Completion
         }
 
         /// <summary>
+        /// Will add a message coming from a function call
+        /// </summary>
+        /// <param name="content">The content from the function</param>
+        /// <param name="function">The name of the function</param>
+        public void AddFunctionMessage(string content, FunctionCall function)
+        {
+            Messages.Add(new Message(Role.Function, content, function.Name, null));
+            Communicator.InvokeOnSystemMessageAdded(this, content);
+        }
+
+        /// <summary>
         /// Will add message coming from the assistant
         /// </summary>
         /// <param name="content">The text content of the message</param>
@@ -276,11 +287,11 @@ namespace ScriptRunner.OpenAi.Models.Completion
                             try
                             {
                                 object? returnValue = compiledScript.Run(functionCall.Arguments);
-                                conversation.AddSystemMessage($"(function call returned: {ReturnValueConverter.GetStringFromObject(returnValue)})");
+                                conversation.AddFunctionMessage($"(function call returned: {ReturnValueConverter.GetStringFromObject(returnValue)})", functionCall);
                             }
                             catch (Exception exception)
                             {
-                                conversation.AddSystemMessage($"The function threw an exception and the user needs to be informed: {exception.Message} {exception.InnerException?.Message}");
+                                conversation.AddFunctionMessage($"The function threw an exception and the user needs to be informed: {exception.Message} {exception.InnerException?.Message}", functionCall);
                             }
 
                             await CompleteAsync(context);
