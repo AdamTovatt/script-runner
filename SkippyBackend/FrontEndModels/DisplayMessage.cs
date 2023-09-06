@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using ScriptRunner.Models;
+using System.Text.Json.Serialization;
 
 namespace SkippyBackend.FrontEndModels
 {
@@ -10,14 +11,30 @@ namespace SkippyBackend.FrontEndModels
         [JsonPropertyName("color")]
         public string Color { get; set; }
 
-        [JsonPropertyName("text")]
-        public string Text { get; set; }
+        [JsonPropertyName("content")]
+        public string Content { get; set; }
+
+        [JsonPropertyName("contentType")]
+        public ContentType ContentType { get; set; }
+
+        [JsonPropertyName("fileName")]
+        public string? FileName { get; set; }
 
         public DisplayMessage(string text, string color, int align)
         {
-            Text = text;
+            Content = text;
             Color = color;
             Align = align;
+            ContentType = ContentType.Text;
+        }
+
+        public DisplayMessage(string content, string color, int align, ContentType contentType, string? fileName)
+        {
+            Content = content;
+            Color = color;
+            ContentType = contentType;
+            Align = align;
+            FileName = fileName;
         }
     }
 }

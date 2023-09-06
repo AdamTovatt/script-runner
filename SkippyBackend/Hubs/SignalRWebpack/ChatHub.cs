@@ -11,6 +11,7 @@ using ScriptRunner.OpenAi;
 using ScriptRunner.OpenAi.Models.Completion;
 using ScriptRunner.OpenAi.Models.Input;
 using Microsoft.AspNetCore.Authorization;
+using ScriptRunner.Models;
 
 namespace SkippyBackend.Hubs.SignalRWebpack
 {
@@ -61,7 +62,8 @@ namespace SkippyBackend.Hubs.SignalRWebpack
                                 typeof(ChangeUserColorScript),
                                 typeof(UploadSvgToCloudinaryScript),
                                 typeof(GetFlightsScript),
-                                typeof(RunLinuxCommandScript)
+                                typeof(RunLinuxCommandScript),
+                                typeof(SendTextFileScript)
                                 )
                             );
                 return functionLookup;
@@ -149,7 +151,14 @@ namespace SkippyBackend.Hubs.SignalRWebpack
         // RPC
         public async Task SubmitInput(string input)
         {
-            DisplayMessage(input, CurrentClientData.ChatConfiguration.Colors["Accent2"], 1);
+            InputInfo? inputInfo = CurrentClientData.Conversation.Input.CurrentInputInfo;
+
+            if (inputInfo == null) throw new NullReferenceException("Input info is null when it should not be");
+
+            if (inputInfo.SubType == SubTypes.Image)
+                DisplayMessage(new DisplayMessage(input, CurrentClientData.ChatConfiguration.Colors["Accent2"], 1, ContentType.Image, "userImage.png"));
+            else
+                DisplayMessage(input, CurrentClientData.ChatConfiguration.Colors["Accent2"], 1);
 
             await Task.CompletedTask;
             ShowTypingAnimation();
@@ -183,6 +192,13 @@ namespace SkippyBackend.Hubs.SignalRWebpack
             DisplayMessage(message, CurrentClientData.ChatConfiguration.Colors["Error"], 0);
         }
 
+        private void ConversationFileWasSent(object sender, byte[] content, ContentType fileType, string fileName)
+        {
+            string base64Content = Convert.ToBase64String(content);
+            string color = CurrentClientData.ChatConfiguration.Colors["Accent1"];
+            DisplayMessage(new DisplayMessage(base64Content, color, -1, fileType, fileName));
+        }
+
         public async Task CompleteAsync()
         {
             Conversation conversation = CurrentClientData.Conversation;
@@ -194,6 +210,7 @@ namespace SkippyBackend.Hubs.SignalRWebpack
                 conversation.Communicator.OnErrorOccured += ConversationErrorOccured;
                 conversation.Communicator.OnSystemMessageAdded += ConversationSystemMessageAdded;
                 conversation.Communicator.OnWantsInput += ConversationWantsInput;
+                conversation.Communicator.OnFileWasSent += ConversationFileWasSent;
 
                 ShowTypingAnimation();
 
@@ -207,6 +224,7 @@ namespace SkippyBackend.Hubs.SignalRWebpack
                 conversation.Communicator.OnErrorOccured -= ConversationErrorOccured;
                 conversation.Communicator.OnSystemMessageAdded -= ConversationSystemMessageAdded;
                 conversation.Communicator.OnWantsInput -= ConversationWantsInput;
+                conversation.Communicator.OnFileWasSent -= ConversationFileWasSent;
             }
         }
     }

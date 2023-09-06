@@ -11,7 +11,7 @@ namespace CustomScripts
         /// </summary>
         /// <param name="html">The HTML string.</param>
         [ScriptStart]
-        public string GetImageUrlFromHtml(string html)
+        public string? GetImageUrlFromHtml(string html)
         {
             // Find the index of the first occurrence of the image tag
             int imgTagStartIndex = html.IndexOf("<img");

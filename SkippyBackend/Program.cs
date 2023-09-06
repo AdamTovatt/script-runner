@@ -17,7 +17,11 @@ namespace SkippyBackend
         {
             WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-            builder.Services.AddSignalR(options => options.MaximumParallelInvocationsPerClient = 2);
+            builder.Services.AddSignalR(options =>
+            {
+                options.MaximumParallelInvocationsPerClient = 2;
+                options.MaximumReceiveMessageSize = null;
+            });
 
             builder.Services.AddCors();
 

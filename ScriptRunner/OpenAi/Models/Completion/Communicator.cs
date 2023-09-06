@@ -1,4 +1,5 @@
-﻿using ScriptRunner.OpenAi.Models.Input;
+﻿using ScriptRunner.Models;
+using ScriptRunner.OpenAi.Models.Input;
 
 namespace ScriptRunner.OpenAi.Models.Completion
 {
@@ -18,6 +19,9 @@ namespace ScriptRunner.OpenAi.Models.Completion
 
         public delegate void WantsInputHandler(InputHandler sender, InputInfo inputInfo);
         public event WantsInputHandler? OnWantsInput;
+
+        public delegate void FileWasSentHandler(object sender, byte[] content, ContentType fileType, string fileName);
+        public event FileWasSentHandler? OnFileWasSent;
 
         /// <summary>
         /// This method can be called to send a message from the bot to the chat
@@ -42,6 +46,11 @@ namespace ScriptRunner.OpenAi.Models.Completion
         public void InvokeOnSystemMessageAdded(object sender, string message)
         {
             OnSystemMessageAdded?.Invoke(sender, message);
+        }
+
+        public void InvokeOnFileWasSent(object sender, byte[] content, ContentType fileType, string fileName)
+        {
+            OnFileWasSent?.Invoke(sender, content, fileType, fileName);
         }
 
         /// <summary>
