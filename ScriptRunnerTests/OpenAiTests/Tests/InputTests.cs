@@ -29,7 +29,7 @@ namespace ScriptRunnerTests.OpenAiTests.Tests
         {
             Conversation.Communicator.OnWantsInput += EnsureNotNullEventHandler;
 
-            decimal number = (await Conversation.Input.GetAsync<decimal?>("Write a number: ", true, 4, "That's not a number. Try again: ")).Value;
+            decimal number = (await Conversation.Input.GetAsync<decimal?>("Write a number: ", true, "That's not a number. Try again: ")).Value;
 
             Assert.IsNotNull(number);
             Assert.AreEqual(123.4m, number);
@@ -53,7 +53,7 @@ namespace ScriptRunnerTests.OpenAiTests.Tests
             
             try
             {
-                await Conversation.Input.GetAsync<decimal?>("Write a number: ", true, 1, "That's not a number. Try again: ");
+                await Conversation.Input.GetAsync<decimal?>("Write a number: ", true, "That's not a number. Try again: ", 1);
             }
             catch(InputException exception)
             {
