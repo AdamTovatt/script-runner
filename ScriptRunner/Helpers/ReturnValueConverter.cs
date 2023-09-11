@@ -28,6 +28,8 @@ namespace ScriptRunner.Helpers
                 foreach (object? item in (IEnumerable)value)
                     sb.AppendLine($"{GetStringFromObject(item)},");
 
+                if (sb.Length == 0) return "(empty list)";
+
                 sb.Length = sb.Length - 1;
 
                 return sb.ToString();
