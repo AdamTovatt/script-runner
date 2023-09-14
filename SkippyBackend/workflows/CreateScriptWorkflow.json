@@ -1,1 +1,0 @@
-{"tasks":["Load all available scripts","Load the division script","Ask the user for the script description","Create a new script based on the description","Try to compile the script","Show the user the script and if it was compiled successfully"],"name":"CreateScriptWorkflow","purpose":"create a script for the user"}
