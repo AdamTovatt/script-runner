@@ -284,9 +284,18 @@ namespace ScriptRunner.OpenAi.Models.Completion
 
                             CompiledScript compiledScript = scriptContainer.GetCompiledScript(context);
 
+                            bool shouldComplete = true; // can be set by a ScriptResult object
                             try
                             {
                                 object? returnValue = compiledScript.Run(functionCall.Arguments);
+
+                                if (returnValue != null && returnValue.GetType() == typeof(ScriptResult)) // so that we don't always complete
+                                {
+                                    ScriptResult scriptResult = (ScriptResult)returnValue;
+                                    shouldComplete = scriptResult.Complete;
+                                    returnValue = scriptResult.Value;
+                                }
+
                                 conversation.AddFunctionMessage($"(function call returned: {ReturnValueConverter.GetStringFromObject(returnValue)})", functionCall);
                             }
                             catch (Exception exception)
@@ -294,7 +303,8 @@ namespace ScriptRunner.OpenAi.Models.Completion
                                 conversation.AddFunctionMessage($"The function threw an exception and the user needs to be informed: {exception.Message} {exception.InnerException?.Message}", functionCall);
                             }
 
-                            await CompleteAsync(context);
+                            if (shouldComplete)
+                                await CompleteAsync(context);
                         }
                     }
                     else
