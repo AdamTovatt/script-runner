@@ -50,7 +50,21 @@ namespace ScriptRunner.OpenAi.Models.Input
             return await GetAsync<T>(new InputInfo(typeof(T), inputMessage, subType, choices));
         }
 
-        public async Task<T?> GetAsync<T>(string inputMessage, bool ensureNotNull, string? retryPromptMessage = null, int? maxAttemptCount = null, string? subType = null, List<InputChoice>? choices = null)
+        /// <summary>
+        /// Will get input async
+        /// </summary>
+        /// <typeparam name="T">The type of input value to get</typeparam>
+        /// <param name="inputMessage">The prompt to the user</param>
+        /// <param name="ensureNotNull">If we should ensure that the input is not null by retrying untill it is not null or max attempts is reached</param>
+        /// <param name="retryPromptMessage">The prompt if the input is faild and retried</param>
+        /// <param name="maxAttemptCount">The max attempts to try to ensure it is not null</param>
+        /// <param name="subType">The sub type of input</param>
+        /// <param name="choices">The choices that should be given to the user</param>
+        /// <param name="customExtractor">If a custom extractor should be used to extract the value it can be provided here</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException"></exception>
+        /// <exception cref="InputException"></exception>
+        public async Task<T?> GetAsync<T>(string inputMessage, bool ensureNotNull, string? retryPromptMessage = null, int? maxAttemptCount = null, string? subType = null, List<InputChoice>? choices = null, Func<string, object?>? customExtractor = null)
         {
             if (!typeof(T).IsNullable())
                 throw new ArgumentException("The type T must be nullable. When ensuring that input is not null. ");
@@ -60,7 +74,7 @@ namespace ScriptRunner.OpenAi.Models.Input
             int attempts = 0;
             while (maxAttemptCount == null || attempts < maxAttemptCount)
             {
-                T? result = await GetAsync<T?>(new InputInfo(typeof(T), messageToUse, subType, choices));
+                T? result = await GetAsync<T?>(new InputInfo(typeof(T), messageToUse, subType, choices), customExtractor);
 
                 if (ensureNotNull && result != null && typeof(T) == typeof(string)) // for strings we check for a mentioned item if ensure not null is set to true
                 {
@@ -92,7 +106,7 @@ namespace ScriptRunner.OpenAi.Models.Input
         /// <returns></returns>
         /// <exception cref="InvalidOperationException">Will be thrown if the conversation that used to take input doesn't have a communicator that has had it's event (OnWantsInput) subscribed to. </exception>
         /// <exception cref="InvalidDataException"></exception>
-        public async Task<T?> GetAsync<T>(InputInfo inputInfo)
+        public async Task<T?> GetAsync<T>(InputInfo inputInfo, Func<string, object?>? customExtractor = null)
         {
             byte[]? result = null;
 
@@ -124,7 +138,7 @@ namespace ScriptRunner.OpenAi.Models.Input
 
             try
             {
-                object? resultObject = await RefineUserInputResultAsync(typeof(T), result, inputInfo);
+                object? resultObject = await RefineUserInputResultAsync(typeof(T), result, inputInfo, customExtractor);
 
                 if (resultObject == null) return default;
                 return (T)resultObject;
@@ -135,7 +149,7 @@ namespace ScriptRunner.OpenAi.Models.Input
             }
         }
 
-        private async Task<object?> RefineUserInputResultAsync(Type type, byte[] result, InputInfo inputInfo)
+        private async Task<object?> RefineUserInputResultAsync(Type type, byte[] result, InputInfo inputInfo, Func<string, object?>? customExtractor = null)
         {
             if (type == typeof(byte[])) // handle byte[]
                 return Convert.FromBase64String(Encoding.UTF8.GetString(result));
@@ -148,7 +162,12 @@ namespace ScriptRunner.OpenAi.Models.Input
 
                 if (type.IsAnyOf(typeof(decimal), typeof(double), typeof(float), typeof(decimal?), typeof(double?), typeof(float?))) // handle decimal types
                 {
-                    decimal? decimalValue = (await Conversation.OpenAi.ExtractAsync<DecimalInputType>(stringValue)).ExtractedValue?.Value;
+                    decimal? decimalValue;
+
+                    if (customExtractor == null)
+                        decimalValue = (await Conversation.OpenAi.ExtractAsync<DecimalInputType>(stringValue)).ExtractedValue?.Value;
+                    else
+                        return customExtractor(stringValue);
 
                     if (type.IsAnyOf(typeof(double), typeof(double?)))
                         return (double?)decimalValue;
@@ -168,6 +187,9 @@ namespace ScriptRunner.OpenAi.Models.Input
                         if (inputChoice != null && inputChoice.Value != null && inputChoice.Value.ToString() != null)
                             longValue = (await Conversation.OpenAi.ExtractAsync<IntegerInputType>(inputChoice.Value.ToString()!)).ExtractedValue?.Value;
                     }
+
+                    if (longValue == null && customExtractor != null)
+                        return customExtractor(stringValue);
 
                     if (longValue == null) // if it's still null, maybe because the user wrote something that isn't an option, then we'll use what they wrote normally
                         longValue = (await Conversation.OpenAi.ExtractAsync<IntegerInputType>(stringValue)).ExtractedValue?.Value;
