@@ -101,9 +101,14 @@ namespace ScriptRunner.OpenAi
             }
         }
 
-        public async Task<string> GetSingleAnswerAsync(string prompt, string answer)
+        public async Task<string> GetSingleAnswerAsync(string prompt, string answer, string? completionModel = null)
         {
-            CompletionParameter completionParameter = new CompletionParameter(Model.Default);
+            string model = Model.Default;
+
+            if (completionModel != null)
+                model = completionModel;
+
+            CompletionParameter completionParameter = new CompletionParameter(model);
             completionParameter.AddSystemMessage(prompt);
             completionParameter.AddUserMessage(answer);
 
