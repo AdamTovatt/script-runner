@@ -41,5 +41,10 @@ namespace ScriptRunner.OpenAi.Helpers
             List<int> encoded = tikToken.Encode(json);
             return encoded.Count;
         }
+
+        public int GetTokenCount(string text)
+        {
+            return tikToken.Encode(text).Count;
+        }
     }
 }
