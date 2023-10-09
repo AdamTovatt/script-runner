@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Text;
+using System.Text.Json;
 
 namespace ScriptRunner.Helpers
 {
@@ -35,7 +36,10 @@ namespace ScriptRunner.Helpers
                 return sb.ToString();
             }
 
-            return value.ToString() ?? "null";
+            if (value.GetType().GetMethod("ToString")?.DeclaringType == value.GetType()) // check if the type has overriden ToString()
+                return value.ToString() ?? "null"; // if a ToString() method has been explicitly declared, use that
+
+            return JsonSerializer.Serialize(value); // otherwise, serialize to json
         }
     }
 }
