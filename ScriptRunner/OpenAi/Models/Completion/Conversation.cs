@@ -278,11 +278,11 @@ namespace ScriptRunner.OpenAi.Models.Completion
                         if (conversation.FunctionLookup == null)
                             throw new Exception("FunctionLookup is null even though a function is being called");
 
-                        if (conversation.FunctionLookup.TryGetCompiledScriptContainer(functionCall.Name, out ICompiledScriptContainer scriptContainer))
+                        if (conversation.FunctionLookup.TryGetCompiledScriptContainer(functionCall.Name, out ICompiledScriptContainer? scriptContainer))
                         {
                             Communicator.InvokeOnFunctionCallWasMade(this, functionCall);
 
-                            CompiledScript compiledScript = scriptContainer.GetCompiledScript(context);
+                            CompiledScript compiledScript = scriptContainer!.GetCompiledScript(context);
 
                             bool shouldComplete = true; // can be set by a ScriptResult object
                             try
@@ -305,6 +305,11 @@ namespace ScriptRunner.OpenAi.Models.Completion
 
                             if (shouldComplete)
                                 await CompleteAsync(context);
+                        }
+                        else
+                        {
+                            conversation.AddSystemMessage("An attempt to call a function that does not exist was made.");
+                            await CompleteAsync(context);
                         }
                     }
                     else

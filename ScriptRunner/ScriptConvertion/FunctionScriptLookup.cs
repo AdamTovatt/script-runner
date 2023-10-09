@@ -102,12 +102,9 @@ namespace ScriptRunner.ScriptConvertion
         /// <param name="functionName">The function name to try to find the compile result for</param>
         /// <param name="scriptCompileResult">The resulting SCriptCompileResult as an out parameter, if there was any</param>
         /// <returns>Wether or not it found a ScriptCompileResult</returns>
-        public bool TryGetCompiledScriptContainer(string functionName, out ICompiledScriptContainer scriptCompileResult)
+        public bool TryGetCompiledScriptContainer(string functionName, out ICompiledScriptContainer? scriptCompileResult)
         {
             bool result = scriptCompileResults.TryGetValue(functionName, out ICompiledScriptContainer? compiledScriptContainer);
-
-            if (compiledScriptContainer == null)
-                throw new Exception($"Tried to get compile result from function name ({functionName}) but the compile result was null, this should not happen");
 
             scriptCompileResult = compiledScriptContainer;
             return result;
