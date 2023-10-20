@@ -66,7 +66,7 @@ namespace ScriptRunnerTests.OpenAiTests.Tests
         private void EnsureNotNullEventHandler(InputHandler sender, InputInfo inputInfo)
         {
             Assert.IsNotNull(inputInfo);
-            Assert.IsTrue(inputInfo.Type == typeof(decimal?).ToString(), "Input info is not of type decimal?");
+            Assert.IsTrue(inputInfo.Type == "Decimal", "Input info is not of type decimal?");
 
             Task.Run(async () =>
             {
@@ -93,7 +93,7 @@ namespace ScriptRunnerTests.OpenAiTests.Tests
         private void EnsureNotNullEventHandler2(InputHandler sender, InputInfo inputInfo)
         {
             Assert.IsNotNull(inputInfo);
-            Assert.IsTrue(inputInfo.Type == typeof(decimal?).ToString(), "Input info is not of type decimal?");
+            Assert.IsTrue(inputInfo.Type == "Decimal", "Input info is not of type decimal?");
 
             Task.Run(async () =>
             {
@@ -105,7 +105,7 @@ namespace ScriptRunnerTests.OpenAiTests.Tests
         private void EnsureNotNullEventHandler3(InputHandler sender, InputInfo inputInfo)
         {
             Assert.IsNotNull(inputInfo);
-            Assert.IsTrue(inputInfo.Type == typeof(decimal?).ToString(), "Input info is not of type decimal");
+            Assert.IsTrue(inputInfo.Type == "Decimal", "Input info is not of type decimal");
 
             Task.Run(async () =>
             {
@@ -117,7 +117,7 @@ namespace ScriptRunnerTests.OpenAiTests.Tests
         private void EnsureNotNullEventHandler4(InputHandler sender, InputInfo inputInfo)
         {
             Assert.IsNotNull(inputInfo);
-            Assert.IsTrue(inputInfo.Type == typeof(decimal?).ToString(), "Input info is not of type decimal");
+            Assert.IsTrue(inputInfo.Type == "Decimal", "Input info is not of type decimal");
 
             Task.Run(async () =>
             {
@@ -146,7 +146,7 @@ namespace ScriptRunnerTests.OpenAiTests.Tests
         private void TakeInputChoiceInputEventHandler(InputHandler sender, InputInfo inputInfo)
         {
             Assert.IsNotNull(inputInfo);
-            Assert.IsTrue(inputInfo.Type == typeof(InputChoice).ToString(), "Input info is not of type InputChoice");
+            Assert.IsTrue(inputInfo.Type == typeof(InputChoice).Name, "Input info is not of type InputChoice");
 
             Task.Run(async () =>
             {
@@ -169,7 +169,7 @@ namespace ScriptRunnerTests.OpenAiTests.Tests
         private void TakeIntInputEventHandler(InputHandler sender, InputInfo inputInfo)
         {
             Assert.IsNotNull(inputInfo);
-            Assert.IsTrue(inputInfo.Type == typeof(int).ToString(), "Input info is not of type int");
+            Assert.IsTrue(inputInfo.Type == typeof(int).Name, "Input info is not of type int");
 
             Task.Run(async () =>
             {
@@ -192,7 +192,7 @@ namespace ScriptRunnerTests.OpenAiTests.Tests
         private void TakeBoolInputEventHandler(InputHandler sender, InputInfo inputInfo)
         {
             Assert.IsNotNull(inputInfo);
-            Assert.IsTrue(inputInfo.Type == typeof(bool).ToString(), "Input info is not of type bool");
+            Assert.IsTrue(inputInfo.Type == typeof(bool).Name, "Input info is not of type bool");
 
             Task.Run(async () =>
             {
