@@ -4,12 +4,13 @@ using System.Text.Json;
 using System.Text;
 using ScriptRunner.OpenAi.Models.Completion;
 using ScriptRunner.OpenAi.Models.Input.Types;
+using ScriptRunner.OpenAi.Models.Files;
 
 namespace ScriptRunner.OpenAi
 {
     public class OpenAiApi
     {
-        private const string completionUrl = "https://api.openai.com/v1/chat/completions";
+        public static string BaseUrl = "https://api.openai.com/v1/";
 
         private string apiKey;
         private HttpClient client;
@@ -68,8 +69,7 @@ namespace ScriptRunner.OpenAi
         /// <exception cref="CompletionException">If there was something wrong with completing</exception>
         public async Task<CompletionResult> CompleteAsync(CompletionParameter completionParameter)
         {
-            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, completionUrl);
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+            HttpRequestMessage request = CreateAuthenticatedRequestMessage(HttpMethod.Post, BaseUrl + "chat/completions");
 
             string jsonContent = completionParameter.ToJson();
             request.Content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
@@ -99,6 +99,47 @@ namespace ScriptRunner.OpenAi
             {
                 throw new CompletionException("Error when creating an answer, the connection to OpenAi timed out.", null);
             }
+        }
+
+        /// <summary>
+        /// Will upload a file
+        /// </summary>
+        /// <param name="fileData">The string content of the file</param>
+        /// <param name="purpose">The purpose of the file, defaults to "fine-tune"</param>
+        /// <returns>A upload file result, check that the Error property is null if you want to ensure a success</returns>
+        public async Task<UploadFileResult> UploadFileAsync(string fileData, string purpose = "fine-tune")
+        {
+            HttpRequestMessage request = CreateAuthenticatedRequestMessage(HttpMethod.Post, BaseUrl + "files");
+
+            request.Content = new MultipartFormDataContent
+            {
+                { new ByteArrayContent(Encoding.UTF8.GetBytes(fileData)), "file", "fileData.txt" },
+                { new StringContent(purpose), "purpose" }
+            };
+
+            HttpResponseMessage response = await client.SendAsync(request);
+
+            return UploadFileResult.FromJson(await response.Content.ReadAsStringAsync());
+        }
+
+        /// <summary>
+        /// Will delete a file
+        /// </summary>
+        /// <param name="fileId">The id of the file to delete</param>
+        /// <returns>A delete file result</returns>
+        public async Task<DeleteFileResult> DeleteFileAsync(string fileId)
+        {
+            HttpRequestMessage request = CreateAuthenticatedRequestMessage(HttpMethod.Delete, BaseUrl + $"files/{fileId}");
+
+            return DeleteFileResult.FromJson(await (await client.SendAsync(request)).Content.ReadAsStringAsync());
+        }
+
+        private HttpRequestMessage CreateAuthenticatedRequestMessage(HttpMethod method, string url)
+        {
+            HttpRequestMessage request = new HttpRequestMessage(method, url);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+
+            return request;
         }
 
         public async Task<string> GetSingleAnswerAsync(string prompt, string answer, string? completionModel = null)
