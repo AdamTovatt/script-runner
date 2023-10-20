@@ -5,6 +5,8 @@ using System.Text;
 using ScriptRunner.OpenAi.Models.Completion;
 using ScriptRunner.OpenAi.Models.Input.Types;
 using ScriptRunner.OpenAi.Models.Files;
+using ScriptRunner.OpenAi.Models.Tuning;
+using System.Net.Http.Json;
 
 namespace ScriptRunner.OpenAi
 {
@@ -134,6 +136,69 @@ namespace ScriptRunner.OpenAi
             return DeleteFileResult.FromJson(await (await client.SendAsync(request)).Content.ReadAsStringAsync());
         }
 
+        /// <summary>
+        /// Will return a list of all available models
+        /// </summary>
+        /// <returns>A model list response containing a list of the available models</returns>
+        public async Task<ModelListResponse> GetModelsAsync()
+        {
+            HttpRequestMessage request = CreateAuthenticatedRequestMessage(HttpMethod.Get, BaseUrl + "models");
+
+            return ModelListResponse.FromJson(await (await client.SendAsync(request)).Content.ReadAsStringAsync());
+        }
+
+        /// <summary>
+        /// Will start a fine tuning job
+        /// </summary>
+        /// <param name="trainingFileId">The id of the training file to use. A training file should be uploaded with the upload file method first</param>
+        /// <param name="model">The model to train from, the GetModelsAsync() method can be used to get a list of models to chose from, even though not all of them will be able to be fine tuned. Also, from that endpoint they have permissions, one of them is if it is allowed to be fine tuned, but right now it seems that is always false even for the models that can actually be fine tuned</param>
+        /// <returns>A TuningJobResponse object, check the Error property for errors</returns>
+        public async Task<TuningJobResponse> StartTuningJobAsync(string trainingFileId, string model)
+        {
+            HttpRequestMessage request = CreateAuthenticatedRequestMessage(HttpMethod.Post, BaseUrl + "fine_tuning/jobs");
+
+            string json = JsonSerializer.Serialize(new { training_file = trainingFileId, model });
+            request.Content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            return TuningJobResponse.FromJson(await (await client.SendAsync(request)).Content.ReadAsStringAsync());
+        }
+
+        /// <summary>
+        /// Will get a tuning job
+        /// </summary>
+        /// <param name="jobId">The id of the job to get</param>
+        /// <returns>A TuningJobResponse with information about the job with the provided id</returns>
+        public async Task<TuningJobResponse> GetTuningJobAsync(string jobId)
+        {
+            HttpRequestMessage request = CreateAuthenticatedRequestMessage(HttpMethod.Get, BaseUrl + $"fine_tuning/jobs/{jobId}");
+
+            return TuningJobResponse.FromJson(await (await client.SendAsync(request)).Content.ReadAsStringAsync());
+        }
+
+        /// <summary>
+        /// Will get a list of events that has happened during the tuning job with the given job id
+        /// </summary>
+        /// <param name="jobId">The id of the tuning job to get events for</param>
+        /// <returns>A TuningJobEventResponse object with information about the events that has happened</returns>
+        public async Task<TuningJobEventResponse> GetTuningJobEventsAsync(string jobId)
+        {
+            HttpRequestMessage request = CreateAuthenticatedRequestMessage(HttpMethod.Get, BaseUrl + $"fine_tuning/jobs/{jobId}/events");
+
+            return TuningJobEventResponse.FromJson(await (await client.SendAsync(request)).Content.ReadAsStringAsync());
+        }
+
+        /// <summary>
+        /// Will cancel a tuning job
+        /// </summary>
+        /// <param name="jobId">The id of the job to cancel</param>
+        /// <returns>A TuningJobResponse with information about the job that was cancelled</returns>
+        public async Task<TuningJobResponse> CancelTuningJobAsync(string jobId)
+        {
+            HttpRequestMessage request = CreateAuthenticatedRequestMessage(HttpMethod.Post, BaseUrl + $"fine_tuning/jobs/{jobId}/cancel");
+
+            return TuningJobResponse.FromJson(await (await client.SendAsync(request)).Content.ReadAsStringAsync());
+        }
+
         private HttpRequestMessage CreateAuthenticatedRequestMessage(HttpMethod method, string url)
         {
             HttpRequestMessage request = new HttpRequestMessage(method, url);
@@ -142,6 +207,13 @@ namespace ScriptRunner.OpenAi
             return request;
         }
 
+        /// <summary>
+        /// Will return the answer from completing a conversation that consists of the prompt and ansawer provided as parameters here
+        /// </summary>
+        /// <param name="prompt">The prompt will be sent as the system message in the conversation, this is the system prompt for the assistant</param>
+        /// <param name="answer">The answer will be sent as the user message in the conversation, this is the answer that the user writes after the system promt</param>
+        /// <param name="completionModel">The model to use for completion</param>
+        /// <returns>A string that is the answer from the assistant</returns>
         public async Task<string> GetSingleAnswerAsync(string prompt, string answer, string? completionModel = null)
         {
             string model = Model.Default;

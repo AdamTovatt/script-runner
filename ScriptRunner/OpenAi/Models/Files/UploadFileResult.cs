@@ -5,8 +5,6 @@ namespace ScriptRunner.OpenAi.Models.Files
 {
     public class UploadFileResult : OpenAiApiResponse
     {
-        [JsonPropertyName("object")]
-        public string Object { get; set; }
         [JsonPropertyName("id")]
         public string Id { get; set; }
         [JsonPropertyName("purpose")]
