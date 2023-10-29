@@ -7,6 +7,7 @@ using ScriptRunner.OpenAi.Models.Input.Types;
 using ScriptRunner.OpenAi.Models.Files;
 using ScriptRunner.OpenAi.Models.Tuning;
 using System.Net.Http.Json;
+using ScriptRunner.OpenAi.Models.Embeddings;
 
 namespace ScriptRunner.OpenAi
 {
@@ -197,6 +198,22 @@ namespace ScriptRunner.OpenAi
             HttpRequestMessage request = CreateAuthenticatedRequestMessage(HttpMethod.Post, BaseUrl + $"fine_tuning/jobs/{jobId}/cancel");
 
             return TuningJobResponse.FromJson(await (await client.SendAsync(request)).Content.ReadAsStringAsync());
+        }
+
+        /// <summary>
+        /// Will get the embeddings for a text input using a given model (default is text-embedding-ada-002)
+        /// </summary>
+        /// <param name="textInput">The input to get the embeddings for</param>
+        /// <param name="model"></param>
+        /// <returns>A GetEmbeddingsResult object</returns>
+        public async Task<GetEmbeddingsResult> GetEmbeddingsAsync(string textInput, string model = "text-embedding-ada-002")
+        {
+            HttpRequestMessage request = CreateAuthenticatedRequestMessage(HttpMethod.Post, BaseUrl + "embeddings");
+
+            string json = JsonSerializer.Serialize(new { input = textInput, model });
+            request.Content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            return GetEmbeddingsResult.FromJson(await (await client.SendAsync(request)).Content.ReadAsStringAsync());
         }
 
         private HttpRequestMessage CreateAuthenticatedRequestMessage(HttpMethod method, string url)
