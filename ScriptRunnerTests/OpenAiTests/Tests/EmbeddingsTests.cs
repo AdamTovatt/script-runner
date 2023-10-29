@@ -17,6 +17,7 @@ namespace ScriptRunnerTests.OpenAiTests.Tests
             GetEmbeddingsResult getResult = await openAi.GetEmbeddingsAsync(input);
 
             Assert.IsNotNull(getResult);
+            Assert.AreEqual(input, getResult.InputText);
             Assert.IsNull(getResult.Error);
             Assert.IsNotNull(getResult.Data);
             Assert.AreEqual(1, getResult.Data.Length);

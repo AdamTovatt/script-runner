@@ -8,6 +8,7 @@ namespace ScriptRunner.OpenAi.Models.Embeddings
     {
         [JsonPropertyName("data")]
         public EmbeddingData[] Data { get; set; }
+        public string? InputText { get; set; }
 
         public GetEmbeddingsResult(EmbeddingData[] data)
         {
@@ -20,6 +21,12 @@ namespace ScriptRunner.OpenAi.Models.Embeddings
 
             if (result == null) throw new JsonException($"Could not deserialize typeof @{typeof(GetEmbeddingsResult)} from json with lengt {json.Length}: {json}");
             return result;
+        }
+
+        public GetEmbeddingsResult SetInputText(string inputText)
+        {
+            InputText = inputText;
+            return this;
         }
     }
 }

@@ -213,7 +213,7 @@ namespace ScriptRunner.OpenAi
             string json = JsonSerializer.Serialize(new { input = textInput, model });
             request.Content = new StringContent(json, Encoding.UTF8, "application/json");
 
-            return GetEmbeddingsResult.FromJson(await (await client.SendAsync(request)).Content.ReadAsStringAsync());
+            return GetEmbeddingsResult.FromJson(await (await client.SendAsync(request)).Content.ReadAsStringAsync()).SetInputText(textInput);
         }
 
         private HttpRequestMessage CreateAuthenticatedRequestMessage(HttpMethod method, string url)
