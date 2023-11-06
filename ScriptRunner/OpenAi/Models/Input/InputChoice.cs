@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace ScriptRunner.OpenAi.Models.Input
 {
@@ -9,6 +10,25 @@ namespace ScriptRunner.OpenAi.Models.Input
 
         [JsonPropertyName("displayValue")]
         public string DisplayValue { get; set; }
+
+        [JsonPropertyName("metadata")]
+        public string? Metadata { get; set; }
+
+        public InputChoice(object? value, string displayValue, object metadata)
+        {
+            Value = value;
+            DisplayValue = displayValue;
+            
+            if(metadata != null)
+                Metadata = JsonSerializer.Serialize(metadata);
+        }
+
+        public InputChoice(object? value, string displayValue, string metadata)
+        {
+            Value = value;
+            DisplayValue = displayValue;
+            Metadata = metadata;
+        }
 
         public InputChoice(object? value, string displayValue)
         {
