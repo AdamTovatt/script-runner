@@ -27,5 +27,15 @@ namespace ScriptRunner.OpenAi.Models.Completion
             Name = name;
             Arguments = arguments;
         }
+
+        /// <summary>
+        /// Will create a function call from a given name of a function
+        /// </summary>
+        /// <param name="name">The name of the function</param>
+        /// <returns></returns>
+        public static FunctionCall FromName(string name)
+        {
+            return new FunctionCall(name, null);
+        }
     }
 }

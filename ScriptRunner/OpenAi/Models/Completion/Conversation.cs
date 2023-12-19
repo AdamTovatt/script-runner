@@ -254,6 +254,57 @@ namespace ScriptRunner.OpenAi.Models.Completion
         }
 
         /// <summary>
+        /// Will run a function call using the provided context for the scripts
+        /// </summary>
+        /// <param name="functionCall">The function call to run</param>
+        /// <param name="context">The context for that function call</param>
+        /// <returns></returns>
+        public async Task RunFunctionCallAsync(FunctionCall functionCall, ScriptContext context)
+        {
+            await RunFunctionCallAsync(GetActiveConversation(), functionCall, context);
+        }
+
+        private async Task RunFunctionCallAsync(Conversation conversation, FunctionCall functionCall, ScriptContext context)
+        {
+            if (conversation.FunctionLookup == null)
+                throw new Exception("FunctionLookup is null even though a function is being called");
+
+            if (conversation.FunctionLookup.TryGetCompiledScriptContainer(functionCall.Name, out ICompiledScriptContainer? scriptContainer))
+            {
+                Communicator.InvokeOnFunctionCallWasMade(this, functionCall);
+
+                CompiledScript compiledScript = scriptContainer!.GetCompiledScript(context);
+
+                bool shouldComplete = true; // can be set by a ScriptResult object
+                try
+                {
+                    object? returnValue = compiledScript.Run(functionCall.Arguments);
+
+                    if (returnValue != null && returnValue.GetType() == typeof(ScriptResult)) // so that we don't always complete
+                    {
+                        ScriptResult scriptResult = (ScriptResult)returnValue;
+                        shouldComplete = scriptResult.Complete;
+                        returnValue = scriptResult.Value;
+                    }
+
+                    conversation.AddFunctionMessage($"(function call returned: {ReturnValueConverter.GetStringFromObject(returnValue)})", functionCall);
+                }
+                catch (Exception exception)
+                {
+                    conversation.AddFunctionMessage($"The function threw an exception and the user needs to be informed: {exception.Message} {exception.InnerException?.Message}", functionCall);
+                }
+
+                if (shouldComplete)
+                    await CompleteAsync(context);
+            }
+            else
+            {
+                conversation.AddSystemMessage("An attempt to call a function that does not exist was made.");
+                await CompleteAsync(context);
+            }
+        }
+
+        /// <summary>
         /// Will complete on this conversation using the provided context for the scripts
         /// Completing is the term used by OpenAi for generating a new message or function call from a given conversation
         /// </summary>
@@ -275,42 +326,8 @@ namespace ScriptRunner.OpenAi.Models.Completion
 
                         if (functionCall == null)
                             throw new Exception("Badly formatted answer from OpenAi. It said there would be a function call but the function was missing");
-                        if (conversation.FunctionLookup == null)
-                            throw new Exception("FunctionLookup is null even though a function is being called");
 
-                        if (conversation.FunctionLookup.TryGetCompiledScriptContainer(functionCall.Name, out ICompiledScriptContainer? scriptContainer))
-                        {
-                            Communicator.InvokeOnFunctionCallWasMade(this, functionCall);
-
-                            CompiledScript compiledScript = scriptContainer!.GetCompiledScript(context);
-
-                            bool shouldComplete = true; // can be set by a ScriptResult object
-                            try
-                            {
-                                object? returnValue = compiledScript.Run(functionCall.Arguments);
-
-                                if (returnValue != null && returnValue.GetType() == typeof(ScriptResult)) // so that we don't always complete
-                                {
-                                    ScriptResult scriptResult = (ScriptResult)returnValue;
-                                    shouldComplete = scriptResult.Complete;
-                                    returnValue = scriptResult.Value;
-                                }
-
-                                conversation.AddFunctionMessage($"(function call returned: {ReturnValueConverter.GetStringFromObject(returnValue)})", functionCall);
-                            }
-                            catch (Exception exception)
-                            {
-                                conversation.AddFunctionMessage($"The function threw an exception and the user needs to be informed: {exception.Message} {exception.InnerException?.Message}", functionCall);
-                            }
-
-                            if (shouldComplete)
-                                await CompleteAsync(context);
-                        }
-                        else
-                        {
-                            conversation.AddSystemMessage("An attempt to call a function that does not exist was made.");
-                            await CompleteAsync(context);
-                        }
+                        await RunFunctionCallAsync(conversation, functionCall, context);
                     }
                     else
                     {
