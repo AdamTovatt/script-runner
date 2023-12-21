@@ -1,4 +1,5 @@
 ﻿using ScriptRunner.OpenAi.Converters;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 
@@ -36,6 +37,22 @@ namespace ScriptRunner.OpenAi.Models.Completion
         public static FunctionCall FromName(string name)
         {
             return new FunctionCall(name, null);
+        }
+
+        /// <summary>
+        /// Will deserialize a function call from a json string
+        /// </summary>
+        /// <param name="json">The json to deserialize</param>
+        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
+        public static FunctionCall FromJson(string json)
+        {
+            FunctionCall? result = JsonSerializer.Deserialize<FunctionCall>(json);
+
+            if(result == null)
+                throw new Exception("Could not deserialize function call");
+
+            return result;
         }
     }
 }
