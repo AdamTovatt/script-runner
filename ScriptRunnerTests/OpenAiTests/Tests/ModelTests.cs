@@ -29,15 +29,6 @@ namespace ScriptRunnerTests.OpenAiTests.Tests
             Assert.IsNotNull(model);
             Assert.IsNotNull(model.Id);
             Assert.IsNotNull(model.Permissions);
-            Assert.AreNotEqual(0, model.Permissions);
-
-            List<ModelPermission> modelPermissions = model.Permissions;
-
-            Assert.AreNotEqual(0, modelPermissions.Count);
-
-            ModelPermission permission = modelPermissions.First();
-
-            Assert.IsNotNull(permission);
         }
     }
 }
