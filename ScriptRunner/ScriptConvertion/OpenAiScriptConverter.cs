@@ -78,6 +78,10 @@ namespace ScriptRunner.ScriptConvertion
 
                 string parameterName = parameter.Name;
                 string? parameterDescription = documentation?.GetParameterDescription(parameter.Name);
+
+                if (string.IsNullOrEmpty(parameterDescription) && parameter.HasDefaultValue)
+                    continue;
+
                 function.Parameters.Add(new Parameter(parameterName, parameter.ParameterType, parameterDescription ?? ""), true);
             }
 
