@@ -199,6 +199,7 @@ namespace ScriptRunner.OpenAi.Models.Completion
         public void AddAssistantMessage(string content)
         {
             Messages.Add(new Message(Role.Assistant, content));
+            Communicator.InvokeOnCompletionMessageRecieved(this, content);
         }
 
         /// <summary>
