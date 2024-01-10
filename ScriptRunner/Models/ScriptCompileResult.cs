@@ -82,10 +82,10 @@ namespace ScriptRunner.Models
 
             string methodHeader = MethodInfoConverter.GetMethodHeader(method);
 
-            if(XmlComments == null)
+            if (XmlComments == null)
                 return null;
 
-            if(XmlComments.TryGetValue(methodHeader, out XmlComment? xmlComment))
+            if (XmlComments.TryGetValue(methodHeader, out XmlComment? xmlComment))
                 return xmlComment;
 
             return null;
@@ -93,7 +93,7 @@ namespace ScriptRunner.Models
 
         public string GetErrorMessages()
         {
-            if(Errors == null)
+            if (Errors == null)
                 return string.Empty;
 
             return string.Join("\n", Errors);

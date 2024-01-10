@@ -1,10 +1,9 @@
 ﻿using ScriptRunner.Helpers;
-using ScriptRunner.Models;
 using ScriptRunner.Workflows;
 
 namespace ScriptRunner.Providers
 {
-    public  class DirectoryWorkflowProvider : IWorkflowProvider
+    public class DirectoryWorkflowProvider : IWorkflowProvider
     {
         public string DirectoryPath { get; set; }
         public string WorkflowFileExtension { get; set; } = ".json";

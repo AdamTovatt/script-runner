@@ -1,5 +1,4 @@
-﻿using ScriptRunner;
-using ScriptRunner.DocumentationAttributes;
+﻿using ScriptRunner.DocumentationAttributes;
 
 namespace ScriptRunner.Workflows.Scripts
 {

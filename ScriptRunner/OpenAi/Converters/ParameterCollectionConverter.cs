@@ -1,6 +1,6 @@
-﻿using System.Text.Json;
+﻿using ScriptRunner.OpenAi.Models.Completion.Parameters;
+using System.Text.Json;
 using System.Text.Json.Serialization;
-using ScriptRunner.OpenAi.Models.Completion.Parameters;
 
 namespace ScriptRunner.OpenAi.Converters
 {

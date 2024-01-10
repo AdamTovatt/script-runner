@@ -87,10 +87,10 @@ namespace ScriptRunner.Models
             CompilationUnitSyntax root = (CompilationUnitSyntax)syntaxTree.GetRoot();
             Stack<SyntaxNode> membersToCheck = new Stack<SyntaxNode>(root.Members);
 
-            while(membersToCheck.Count() > 0)
-            { 
+            while (membersToCheck.Count() > 0)
+            {
                 SyntaxNode member = membersToCheck.Pop();
-                
+
                 if (member is MethodDeclarationSyntax methodDeclaration)
                 {
                     SyntaxTrivia trivia = methodDeclaration.GetLeadingTrivia().SingleOrDefault(t => IsCommentTrivia(t));

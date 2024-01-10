@@ -49,7 +49,7 @@ namespace ScriptRunner.OpenAi.Models.Completion
         {
             FunctionCall? result = JsonSerializer.Deserialize<FunctionCall>(json);
 
-            if(result == null)
+            if (result == null)
                 throw new Exception("Could not deserialize function call");
 
             return result;

@@ -1,8 +1,6 @@
 ﻿using ScriptRunner.OpenAi.Helpers;
 using ScriptRunner.OpenAi.Models.Completion;
 using ScriptRunner.OpenAi.Models.Input.Types;
-using System;
-using System.Buffers.Text;
 using System.Text;
 
 namespace ScriptRunner.OpenAi.Models.Input

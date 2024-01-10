@@ -66,7 +66,7 @@ namespace ScriptRunner
                             else // some sort of collection
                             {
                                 Type? genericType = wantedParameter.ParameterType.IsArray ? wantedParameter.ParameterType.GetElementType() : wantedParameter.ParameterType.GenericTypeArguments[0];
-                                if(genericType == null) throw new Exception("Missing generic type for collection");
+                                if (genericType == null) throw new Exception("Missing generic type for collection");
 
                                 Type listType = typeof(List<>).MakeGenericType(genericType);
                                 object? list = Activator.CreateInstance(listType);
@@ -82,7 +82,7 @@ namespace ScriptRunner
                                 if (wantedParameter.ParameterType.IsArray)
                                 {
                                     MethodInfo? toArrayMethod = list?.GetType().GetMethod("ToArray");
-                                    if(toArrayMethod == null) throw new Exception("Missing ToArray method for list");
+                                    if (toArrayMethod == null) throw new Exception("Missing ToArray method for list");
                                     parameterResult = toArrayMethod.Invoke(list, null);
                                 }
                                 else

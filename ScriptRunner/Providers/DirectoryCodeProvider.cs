@@ -25,7 +25,7 @@ namespace ScriptRunner.Providers
             if (!scriptName.EndsWith(ScriptFileExtension))
                 scriptPath = $"{Path.Combine(DirectoryPath, scriptName)}{ScriptFileExtension}";
             else
-                scriptPath = $"{Path.Combine(DirectoryPath, scriptName)}";    
+                scriptPath = $"{Path.Combine(DirectoryPath, scriptName)}";
 
             if (!File.Exists(scriptPath))
                 return null;

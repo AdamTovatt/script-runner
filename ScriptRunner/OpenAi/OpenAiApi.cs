@@ -1,13 +1,11 @@
-﻿using OpenAi.Models.Completion;
-using System.Net.Http.Headers;
-using System.Text.Json;
-using System.Text;
-using ScriptRunner.OpenAi.Models.Completion;
-using ScriptRunner.OpenAi.Models.Input.Types;
-using ScriptRunner.OpenAi.Models.Files;
-using ScriptRunner.OpenAi.Models.Tuning;
-using System.Net.Http.Json;
+﻿using ScriptRunner.OpenAi.Models.Completion;
 using ScriptRunner.OpenAi.Models.Embeddings;
+using ScriptRunner.OpenAi.Models.Files;
+using ScriptRunner.OpenAi.Models.Input.Types;
+using ScriptRunner.OpenAi.Models.Tuning;
+using System.Net.Http.Headers;
+using System.Text;
+using System.Text.Json;
 
 namespace ScriptRunner.OpenAi
 {

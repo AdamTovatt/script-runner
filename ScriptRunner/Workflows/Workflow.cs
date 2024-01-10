@@ -1,5 +1,4 @@
 ﻿using ScriptRunner.OpenAi.Models.Completion;
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -50,7 +49,7 @@ namespace ScriptRunner.Workflows
         {
             currentStep++;
 
-            return GetPromptForCurrentTask(conversation);   
+            return GetPromptForCurrentTask(conversation);
         }
 
         public void SaveValue(string key, object value)

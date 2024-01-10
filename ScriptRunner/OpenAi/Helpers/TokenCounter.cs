@@ -38,7 +38,7 @@ namespace ScriptRunner.OpenAi.Helpers
 
         private void AddCounter(string name, TikToken counter)
         {
-            lock(counterLock)
+            lock (counterLock)
             {
                 if (!counters.ContainsKey(name))
                     counters.Add(name, counter);

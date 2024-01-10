@@ -1,5 +1,4 @@
-﻿using ScriptRunner.OpenAi.Models.Tuning;
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace ScriptRunner.OpenAi.Models.Embeddings

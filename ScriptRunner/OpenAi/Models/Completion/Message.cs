@@ -64,7 +64,7 @@ namespace ScriptRunner.OpenAi.Models.Completion
         /// <returns></returns>
         public override string ToString()
         {
-            if(FunctionCall == null)
+            if (FunctionCall == null)
                 return $"{Role}: {Content}";
             return $"{Role}: (function) {FunctionCall}";
         }

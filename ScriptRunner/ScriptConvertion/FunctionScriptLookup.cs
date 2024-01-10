@@ -32,7 +32,7 @@ namespace ScriptRunner.ScriptConvertion
             {
                 if (provider is ICompiledScriptProvider scriptProvider)
                     compiledScriptProviders.Add(scriptProvider);
-                else if(provider is ICodeProvider codeProvider)
+                else if (provider is ICodeProvider codeProvider)
                     codeProviders.Add(codeProvider);
                 else
                     throw new NotSupportedException($"The given code or script provider ({provider.GetType().Name}) is not a valid code or script provider");
@@ -49,7 +49,7 @@ namespace ScriptRunner.ScriptConvertion
             {
                 Dictionary<Function, ICompiledScriptContainer> functionsScriptMap = new Dictionary<Function, ICompiledScriptContainer>();
 
-                foreach(ICodeProvider codeProvider in codeProviders) // go through all the code providers and compile their codes
+                foreach (ICodeProvider codeProvider in codeProviders) // go through all the code providers and compile their codes
                 {
                     Dictionary<Function, ScriptCompileResult> openAiScriptConverter = await OpenAiScriptConverter.GetAllFunctionsAsync(codeProvider);
 
@@ -57,7 +57,7 @@ namespace ScriptRunner.ScriptConvertion
                         functionsScriptMap.Add(function.Key, function.Value); // add all the compile results
                 }
 
-                foreach(ICompiledScriptProvider compiledScriptProvider in compiledScriptProviders) // go through the precompiled scripts and add them
+                foreach (ICompiledScriptProvider compiledScriptProvider in compiledScriptProviders) // go through the precompiled scripts and add them
                 {
                     foreach (ICompiledScriptContainer compiledScriptContainer in compiledScriptProvider.GetCompiledScripts())
                     {
@@ -75,7 +75,7 @@ namespace ScriptRunner.ScriptConvertion
                 {
                     Function function = mapPair.Key;
 
-                    if(function.AllowedRoles != null)
+                    if (function.AllowedRoles != null)
                     {
                         if (claimsPrincipal == null)
                             throw new InvalidOperationException($"Claims principal as not been set, but the function ({function.Name}) requires a claims principal. Use .SetClaimsPrincipal() on the FunctionScriptLookup before loading functions that have specific allowed roles. ");

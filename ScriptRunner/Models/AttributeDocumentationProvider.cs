@@ -26,7 +26,7 @@ namespace ScriptRunner.Models
 
             AllowedRoles? allowedRoles = methodInfo.GetCustomAttribute<AllowedRoles>();
 
-            if(allowedRoles != null)
+            if (allowedRoles != null)
                 AllowedRoles = allowedRoles.Roles;
         }
 

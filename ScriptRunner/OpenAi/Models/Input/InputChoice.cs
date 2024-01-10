@@ -18,8 +18,8 @@ namespace ScriptRunner.OpenAi.Models.Input
         {
             Value = value;
             DisplayValue = displayValue;
-            
-            if(metadata != null)
+
+            if (metadata != null)
                 Metadata = JsonSerializer.Serialize(metadata);
         }
 
@@ -53,7 +53,7 @@ namespace ScriptRunner.OpenAi.Models.Input
         {
             List<InputChoice> inputChoices = new List<InputChoice>();
 
-            foreach(T item in products)
+            foreach (T item in products)
             {
                 inputChoices.Add(choiceCreator(item));
             }

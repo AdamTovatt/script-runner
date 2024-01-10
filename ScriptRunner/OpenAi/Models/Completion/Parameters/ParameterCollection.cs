@@ -71,9 +71,9 @@ namespace ScriptRunner.OpenAi.Models.Completion.Parameters
             {
                 jsonBuilder.Append(", \"required\": [");
                 bool shouldAddComma = false;
-                foreach(Parameter parameter in RequiredParameters)
+                foreach (Parameter parameter in RequiredParameters)
                 {
-                    if(shouldAddComma)
+                    if (shouldAddComma)
                         jsonBuilder.Append(", ");
 
                     jsonBuilder.Append($"\"{parameter.Name}\"");
