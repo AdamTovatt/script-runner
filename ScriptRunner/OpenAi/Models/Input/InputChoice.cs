@@ -30,6 +30,13 @@ namespace ScriptRunner.OpenAi.Models.Input
             Metadata = metadata;
         }
 
+        public InputChoice(object? value, string displayValue, IMetadata metadata)
+        {
+            Value = value;
+            DisplayValue = displayValue;
+            Metadata = metadata.Serialize();
+        }
+
         public InputChoice(object? value, string displayValue)
         {
             Value = value;
