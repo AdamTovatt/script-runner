@@ -23,6 +23,19 @@ namespace ScriptRunner.OpenAi.Models.Completion
         public delegate void FileWasSentHandler(object sender, byte[] content, ContentType fileType, string fileName);
         public event FileWasSentHandler? OnFileWasSent;
 
+        public delegate void ResponseSuggestionsWereSent(object sender, string[] suggestions);
+        public event ResponseSuggestionsWereSent? OnResponseSuggestionsWereSent;
+
+        /// <summary>
+        /// This method can be called to send a list of input suggestions to the chat
+        /// </summary>
+        /// <param name="sender">The origin of the event</param>
+        /// <param name="suggestions">The suggestions to send to the chat</param>
+        public void InvokeOnResponseSuggestionsWereSent(object sender, string[] suggestions)
+        {
+            OnResponseSuggestionsWereSent?.Invoke(sender, suggestions);
+        }
+
         /// <summary>
         /// This method can be called to send a message from the bot to the chat
         /// </summary>
