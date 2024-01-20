@@ -6,24 +6,51 @@ namespace ScriptRunner.OpenAi.Models.Completion
     public class Communicator
     {
         public delegate void CompletionMessageRecievedHandler(object sender, string message);
+        /// <summary>
+        /// Will be called when a completion message was received (this is a message from the AI)
+        /// </summary>
         public event CompletionMessageRecievedHandler? OnCompletionMessageRecieved;
 
         public delegate void FunctionCallWasMadeHandler(object sender, FunctionCall functionCall);
+        /// <summary>
+        /// Will be called when a function call was made
+        /// </summary>
         public event FunctionCallWasMadeHandler? OnFunctionCallWasMade;
 
         public delegate void ErrorOccuredHandler(object sender, string message);
+        /// <summary>
+        /// Will be called when an error occured
+        /// </summary>
         public event ErrorOccuredHandler? OnErrorOccured;
 
         public delegate void SystemMessageAddedHandler(object sender, string message);
+        /// <summary>
+        /// Will be called when a system message was added to the chat
+        /// </summary>
         public event SystemMessageAddedHandler? OnSystemMessageAdded;
 
         public delegate void WantsInputHandler(InputHandler sender, InputInfo inputInfo);
+        /// <summary>
+        /// Will be called when a script wants input
+        /// </summary>
         public event WantsInputHandler? OnWantsInput;
 
+        public delegate void InputSubmittedHandler(object sender, InputResult inputResult);
+        /// <summary>
+        /// Will be called when input was submitted
+        /// </summary>
+        public event InputSubmittedHandler? OnInputSubmitted;
+
         public delegate void FileWasSentHandler(object sender, byte[] content, ContentType fileType, string fileName);
+        /// <summary>
+        /// Will be called when a file was sent
+        /// </summary>
         public event FileWasSentHandler? OnFileWasSent;
 
         public delegate void ResponseSuggestionsWereSent(object sender, string[] suggestions);
+        /// <summary>
+        /// Will be called when response suggestions are sent to the chat
+        /// </summary>
         public event ResponseSuggestionsWereSent? OnResponseSuggestionsWereSent;
 
         /// <summary>
@@ -79,6 +106,11 @@ namespace ScriptRunner.OpenAi.Models.Completion
 
             OnWantsInput.Invoke(sender, inputInfo);
             return true;
+        }
+
+        public void InvokeInputSubmitted(object sender, InputResult inputResult)
+        {
+            OnInputSubmitted?.Invoke(sender, inputResult);
         }
     }
 }

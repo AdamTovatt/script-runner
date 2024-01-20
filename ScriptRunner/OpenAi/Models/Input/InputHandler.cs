@@ -138,6 +138,8 @@ namespace ScriptRunner.OpenAi.Models.Input
             {
                 object? resultObject = await RefineUserInputResultAsync(typeof(T), result, inputInfo, customExtractor);
 
+                Conversation.Communicator.InvokeInputSubmitted(this, new InputResult(inputInfo, typeof(T), resultObject == null ? default : (T)resultObject)); // invoke the input submitted event
+
                 if (resultObject == null) return default;
                 return (T)resultObject;
             }
