@@ -30,6 +30,11 @@ namespace ScriptRunner.OpenAi.Models.Input
             Conversation = conversation;
         }
 
+        public async Task<T?> GetWithSpecifiedIdAsync<T>(string inputMessage, string subType, string id)
+        {
+            return await GetAsync<T>(new InputInfo(typeof(T), inputMessage, subType, null, id: id));
+        }
+
         public async Task<T?> GetAsync<T>(string inputMessage, string subType)
         {
             return await GetAsync<T>(new InputInfo(typeof(T), inputMessage, subType, null));
