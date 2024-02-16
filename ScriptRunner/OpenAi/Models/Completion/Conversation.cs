@@ -2,10 +2,7 @@
 using ScriptRunner.Models;
 using ScriptRunner.OpenAi.Helpers;
 using ScriptRunner.OpenAi.Models.Input;
-using ScriptRunner.Providers;
 using ScriptRunner.ScriptConvertion;
-using ScriptRunner.Workflows;
-using ScriptRunner.Workflows.Scripts;
 using System.Text.Json;
 
 namespace ScriptRunner.OpenAi.Models.Completion
@@ -56,31 +53,6 @@ namespace ScriptRunner.OpenAi.Models.Completion
         public int? TokenLimit { get; set; }
 
         /// <summary>
-        /// Having child and parent conversations in a conversation allows us to have subconversations. Used together with ActiveConversation
-        /// </summary>
-        public Conversation? ParentConversation { get; set; }
-
-        /// <summary>
-        /// Having child and parent conversations in a conversation allows us to have subconversations. Used together with ActiveConversation
-        /// </summary>
-        public Conversation? ChildConversation { get; set; }
-
-        /// <summary>
-        /// Kind of deprecated, or this feature needs work if it's gonna work
-        /// </summary>
-        public Workflow? Workflow { get; set; }
-
-        /// <summary>
-        /// Also kind of deprecated, or this feature needs work if it's gonna work
-        /// </summary>
-        public IWorkflowProvider? WorkflowProvider { get; set; }
-
-        /// <summary>
-        /// The currently active conversation. This is necessary since a conversation can have subconversations and we want to use the one that is currently active and being used
-        /// </summary>
-        public Conversation ActiveConversation { get { return GetActiveConversation(); } }
-
-        /// <summary>
         /// Used to handle input to the conversation
         /// </summary>
         public InputHandler Input { get; private set; }
@@ -96,11 +68,6 @@ namespace ScriptRunner.OpenAi.Models.Completion
             tokenCounter = new TokenCounter(model);
             Communicator = new Communicator();
             Input = new InputHandler(this);
-        }
-
-        public void Add(IWorkflowProvider workflowProvider)
-        {
-            WorkflowProvider = workflowProvider;
         }
 
         public void Add(CompletionParameter parameter)
@@ -211,49 +178,6 @@ namespace ScriptRunner.OpenAi.Models.Completion
             Messages.Add(new Message(Role.User, content));
         }
 
-        public async Task<string> EnterWorkflowAsync(string workflowName)
-        {
-            if (WorkflowProvider == null) throw new Exception("An attempt to enter workflow mode was made but no workflow provider was set");
-
-            Workflow = await WorkflowProvider.GetWorkflowAsync(workflowName);
-
-            if (Workflow == null) return $"Workflow {workflowName} was not found. No workflow was started.";
-
-            Conversation workflowConversation = new Conversation(OpenAi, Model, TokenLimit);
-            ChildConversation = workflowConversation;
-
-            workflowConversation.Communicator = Communicator;
-            workflowConversation.ParentConversation = this;
-            workflowConversation.AddSystemMessage("Workflow mode was entered");
-            workflowConversation.Workflow = Workflow;
-
-            PreCompiledScriptProvider scriptProvider = new PreCompiledScriptProvider(typeof(GoToNextStepScript), typeof(ExitWorkflowScript));
-            FunctionScriptLookup workflowScriptLookup = new FunctionScriptLookup(scriptProvider);
-            workflowScriptLookup.CombineWith(FunctionLookup);
-
-            try
-            {
-                await workflowScriptLookup.LoadFunctionsAsync();
-            }
-            catch (Exception exception)
-            {
-                return $"Workflow {workflowName} was not started. An error occured while loading the workflow: {exception.Message}";
-            }
-
-            workflowConversation.SetFunctionLookup(workflowScriptLookup);
-            workflowConversation.AddSystemMessage(workflowConversation.Workflow.GoToNextStep(workflowConversation));
-
-            return $"Workflow started: {workflowName}";
-        }
-
-        public string ExitWorkflow(string exitMessage)
-        {
-            if (ParentConversation != null)
-                ParentConversation.AddSystemMessage($"Workflow exited: {exitMessage}");
-
-            return $"Workflow exited: {exitMessage}";
-        }
-
         /// <summary>
         /// Will run a function call using the provided context for the scripts
         /// </summary>
@@ -262,15 +186,10 @@ namespace ScriptRunner.OpenAi.Models.Completion
         /// <returns></returns>
         public async Task RunFunctionCallAsync(FunctionCall functionCall, ScriptContext context)
         {
-            await RunFunctionCallAsync(GetActiveConversation(), functionCall, context);
-        }
-
-        private async Task RunFunctionCallAsync(Conversation conversation, FunctionCall functionCall, ScriptContext context)
-        {
-            if (conversation.FunctionLookup == null)
+            if (FunctionLookup == null)
                 throw new Exception("FunctionLookup is null even though a function is being called");
 
-            if (conversation.FunctionLookup.TryGetCompiledScriptContainer(functionCall.Name, out ICompiledScriptContainer? scriptContainer))
+            if (FunctionLookup.TryGetCompiledScriptContainer(functionCall.Name, out ICompiledScriptContainer? scriptContainer))
             {
                 Communicator.InvokeOnFunctionCallWasMade(this, functionCall);
 
@@ -288,11 +207,11 @@ namespace ScriptRunner.OpenAi.Models.Completion
                         returnValue = scriptResult.Value;
                     }
 
-                    conversation.AddFunctionMessage($"(function call returned: {ReturnValueConverter.GetStringFromObject(returnValue)})", functionCall);
+                    AddFunctionMessage($"(function call returned: {ReturnValueConverter.GetStringFromObject(returnValue)})", functionCall);
                 }
                 catch (Exception exception)
                 {
-                    conversation.AddFunctionMessage($"The function threw an exception and the user needs to be informed: {exception.Message} {exception.InnerException?.Message}", functionCall);
+                    AddFunctionMessage($"The function threw an exception and the user needs to be informed: {exception.Message} {exception.InnerException?.Message}", functionCall);
                 }
 
                 if (shouldComplete)
@@ -300,7 +219,7 @@ namespace ScriptRunner.OpenAi.Models.Completion
             }
             else
             {
-                conversation.AddSystemMessage("An attempt to call a function that does not exist was made.");
+                AddSystemMessage("An attempt to call a function that does not exist was made.");
                 await CompleteAsync(context);
             }
         }
@@ -315,9 +234,7 @@ namespace ScriptRunner.OpenAi.Models.Completion
         {
             try
             {
-                Conversation conversation = GetActiveConversation();
-
-                CompletionResult result = await OpenAi.CompleteAsync(conversation);
+                CompletionResult result = await OpenAi.CompleteAsync(this);
 
                 foreach (Choice choice in result.Choices)
                 {
@@ -328,7 +245,7 @@ namespace ScriptRunner.OpenAi.Models.Completion
                         if (functionCall == null)
                             throw new Exception("Badly formatted answer from OpenAi. It said there would be a function call but the function was missing");
 
-                        await RunFunctionCallAsync(conversation, functionCall, context);
+                        await RunFunctionCallAsync(functionCall, context);
                     }
                     else
                     {
@@ -340,16 +257,6 @@ namespace ScriptRunner.OpenAi.Models.Completion
             {
                 Communicator.InvokeOnErrorOccured(this, $"{exception.Message} {exception.InnerException?.Message}");
             }
-        }
-
-        private Conversation GetActiveConversation()
-        {
-            Conversation targetConversation = this;
-
-            while (targetConversation.ChildConversation != null) // always take the inner most conversation
-                targetConversation = targetConversation.ChildConversation;
-
-            return targetConversation;
         }
     }
 }
